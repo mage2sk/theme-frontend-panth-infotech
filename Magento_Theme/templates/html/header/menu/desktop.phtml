@@ -1,0 +1,154 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * Panth Infotech override: Fix dropdown not closing on mouseleave
+ */
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Hyva\Theme\ViewModel\LucideIcons;
+use Hyva\Theme\ViewModel\Navigation;
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\Escaper;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+/** @var HyvaCsp $hyvaCsp */
+
+/** @var Navigation $viewModelNavigation */
+$viewModelNavigation = $viewModels->require(Navigation::class, $block);
+
+/** @var LucideIcons $lucideIcons */
+$lucideIcons = $viewModels->require(LucideIcons::class);
+
+$uniqueId = '_' . uniqid();
+
+$menuItems = $viewModelNavigation->getNavigation(4);
+$block->setData('cache_tags', $viewModelNavigation->getIdentities());
+
+?>
+<div x-data="initMenuDesktop()" class="z-20 navigation hidden lg:flex" @mousemove.document.passive="handleDocMouseMove($event)">
+    <div class="hidden lg:block lg:px-2 xl:px-8">
+        <nav
+            class="relative"
+            aria-label="<?= $escaper->escapeHtmlAttr(__('Main menu')) ?>"
+        >
+            <ul class="flex justify-start flex-wrap gap-x-2 xl:gap-x-7 py-4">
+                <?php foreach ($menuItems as $index => $menuItem): ?>
+                    <li
+                        class="relative level-0 border-b-2 border-transparent"
+                        :class="openMenu === '<?= $escaper->escapeJs($index) ?>' ? 'border-primary' : ''"
+                        @mouseenter="open('<?= $escaper->escapeJs($index) ?>')"
+                        @click.outside="close()"
+                        @keydown.escape="close()"
+                    >
+                        <span class="flex items-center text-sm xl:text-base">
+                            <a
+                                href="<?= $escaper->escapeUrl($menuItem['url']) ?>"
+                                class="level-0 block py-2 px-1 rounded aria-[current=page]:font-medium"
+                            >
+                                <?= $escaper->escapeHtml($menuItem['name']) ?>
+                            </a>
+                            <?php if (!empty($menuItem['childData'])): ?>
+                                <button
+                                    type="button"
+                                    class="group rounded p-0.5 xl:p-1"
+                                    @click="toggle('<?= $escaper->escapeJs($index) ?>')"
+                                    :aria-expanded="openMenu === '<?= $escaper->escapeJs($index) ?>'"
+                                    aria-controls="desktop-menu-<?= $escaper->escapeHtmlAttr($index) ?>"
+                                >
+                                    <?= $lucideIcons->chevronDownHtml(
+                                        'transition-transform',
+                                        20,
+                                        20,
+                                        ['aria-hidden' => 'true',
+                                         ':class' => "openMenu === '" . $escaper->escapeJs($index) . "' ? 'rotate-180' : ''"]
+                                    ) ?>
+                                    <span class="sr-only">
+                                        <?= $escaper->escapeHtml(__('Show submenu for %1 category', $menuItem['name'])) ?>
+                                    </span>
+                                </button>
+                            <?php endif; ?>
+                        </span>
+                        <?php if (!empty($menuItem['childData'])): ?>
+                            <ul
+                                id="desktop-menu-<?= $escaper->escapeHtmlAttr($index) ?>"
+                                class="z-10 absolute top-full left-1/2 -translate-x-1/2 min-w-40 mt-0.5 py-2 px-1 rounded-md shadow-lg bg-white/95"
+                                x-show="openMenu === '<?= $escaper->escapeJs($index) ?>'"
+                                x-transition
+                                x-cloak
+                            >
+                                <?php foreach ($menuItem['childData'] as $subMenuItem): ?>
+                                    <li>
+                                        <a
+                                            href="<?= $escaper->escapeUrl($subMenuItem['url']) ?>"
+                                            title="<?= $escaper->escapeHtmlAttr($subMenuItem['name']) ?>"
+                                            class="block py-3 px-5 hover:bg-gray-100 aria-[current=page]:font-medium text-nowrap"
+                                        >
+                                            <?= $escaper->escapeHtml($subMenuItem['name']) ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<script>
+    function initMenuDesktop() {
+        return {
+            openMenu: null,
+            closeTimer: null,
+
+            init() {
+                this.setActiveMenu();
+            },
+
+            setActiveMenu() {
+                Array.from(this.$root.querySelectorAll('a')).forEach(link => {
+                    if (link.href === `${window.location.origin}${window.location.pathname}`) {
+                        link.setAttribute('aria-current', 'page');
+                    }
+                });
+            },
+
+            open(id) {
+                if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+                this.openMenu = id;
+            },
+
+            close() {
+                this.openMenu = null;
+            },
+
+            toggle(id) {
+                this.openMenu = this.openMenu === id ? null : id;
+            },
+
+            handleDocMouseMove(e) {
+                if (this.openMenu === null) return;
+                const nav = this.$root;
+                if (!nav) return;
+                // Check if mouse is within the nav or any of its dropdowns
+                const els = nav.querySelectorAll('li.level-0, [x-show]');
+                let inside = nav.contains(e.target);
+                if (!inside) {
+                    this.openMenu = null;
+                }
+            }
+        }
+    }
+
+    window.addEventListener('alpine:init', () => {
+        Alpine.data('initMenuDesktop', initMenuDesktop);
+    }, { once: true })
+</script>
+<?php $hyvaCsp->registerInlineScript() ?>

@@ -1,0 +1,134 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * Modified by Panth Infotech - Custom breadcrumb separator from ThemeCustomizer
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\CurrentProduct;
+use Hyva\Theme\ViewModel\Navigation;
+use Hyva\Theme\ViewModel\StoreConfig;
+use Magento\Catalog\ViewModel\Product\Breadcrumbs;
+use Magento\CatalogUrlRewrite\Model\ProductUrlPathGenerator;
+use Magento\Framework\Escaper;
+use Magento\Theme\Block\Html\Breadcrumbs as BreadcrumbsBlock;
+
+/** @var ViewModelRegistry $viewModels */
+/** @var Escaper $escaper */
+/** @var BreadcrumbsBlock $block */
+
+// Get custom separator from ThemeCustomizer
+$themeHelper = $this->helper(Panth\ThemeCustomizer\Helper\Data::class);
+$customSeparator = $themeHelper->getBreadcrumbSeparator() ?: '/';
+
+$storeConfigViewModel = $viewModels->require(StoreConfig::class);
+$breadcrumbsViewModel = $viewModels->require(Breadcrumbs::class);
+$navigationViewModel = $viewModels->require(Navigation::class);
+$currentProductViewModel = $viewModels->require(CurrentProduct::class);
+
+$productUrlSuffix = $storeConfigViewModel->getStoreConfig(ProductUrlPathGenerator::XML_PATH_PRODUCT_URL_SUFFIX);
+$categoryUrlSuffix = $breadcrumbsViewModel->getCategoryUrlSuffix();
+
+// NOTE: JSON-LD BreadcrumbList is intentionally NOT emitted here (neither
+// server-side nor via runtime JS injection). Panth_AdvancedSEO is the single
+// authoritative source of BreadcrumbList structured data. See
+// Panth\AdvancedSEO\Model\StructuredData\Provider\BreadcrumbProvider.
+
+$product = $currentProductViewModel->exists() ? $currentProductViewModel->get() : null;
+
+?>
+<nav class="breadcrumbs bg-surface shadow-sm" aria-label="Breadcrumb">
+    <div class="container">
+        <ol
+            x-data="initBreadcrumbsProduct()"
+            class="items list-reset -mx-3 py-4 rounded flex flex-nowrap text-grey text-sm overflow-x-auto relative"
+        >
+            <li
+                class="shrink-0 sticky inset-y-0 left-0 w-3 bg-gradient-to-r from-surface"
+                aria-hidden="true"
+            >&ZeroWidthSpace;</li>
+            <template x-for="item in breadcrumbs">
+                <li class="item inline-flex whitespace-nowrap">
+                    <template x-if="item.name !== 'home'">
+                        <span aria-hidden="true" class="separator text-fg-secondary px-2"><?= $escaper->escapeHtml($customSeparator) ?></span>
+                    </template>
+                    <template x-if="item.name === 'product'">
+                        <a :href="item.link" class="text-fg-secondary" aria-current="page" x-text="item.label"></a>
+                    </template>
+                    <template x-if="item.name !== 'product'">
+                        <a :href="item.link" :aria-label="item.title" x-text="item.label"></a>
+                    </template>
+                </li>
+            </template>
+            <li
+                class="shrink-0 sticky inset-y-0 right-0 w-3 bg-gradient-to-l from-surface"
+                aria-hidden="true"
+            >&ZeroWidthSpace;</li>
+        </ol>
+    </div>
+</nav>
+<script>
+    function initBreadcrumbsProduct() {
+
+        const categories = <?= /** @noEscape */ json_encode(
+            $navigationViewModel->getCategories(),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        ) ?>;
+
+        const breadcrumbs = [{
+            name: 'home',
+            label: '<?= $escaper->escapeJs(__('Home')) ?>',
+            title: '<?= $escaper->escapeJs(__('Go to Home Page')) ?>',
+            link: BASE_URL || ''
+        }];
+
+        function getProductCategoryUrl() {
+            <?php if ($breadcrumbsViewModel->isCategoryUsedInProductUrl()): ?>
+            const productUrl = window.location.href.split('?')[0];
+            return productUrl.substring(0, productUrl.lastIndexOf('/')) + '<?= $escaper->escapeJs($categoryUrlSuffix) ?>';
+            <?php else: ?>
+            return document.referrer.split('?')[0]
+            <?php endif; ?>
+        }
+
+        const categoryUrl = getProductCategoryUrl();
+
+        const category = Object.values(categories).find(cat => cat.url === categoryUrl);
+
+        if (category) {
+            let parts = category.path.split('/');
+            // remove root category
+            parts.splice(0, 2)
+            for (let i in parts) {
+                breadcrumbs.push({
+                    name: 'category',
+                    label: categories['c' + parts[i]]['name'],
+                    title: null,
+                    link: categories['c' + parts[i]]['url']
+                });
+            }
+        }
+
+        // add current product to breadcrumbs
+        <?php if ($product): ?>
+        breadcrumbs.push({
+            name: 'product',
+            label: '<?= $escaper->escapeJs($product->getName()) ?>',
+            title: null,
+            link: BASE_URL + '<?= $escaper->escapeJs($product->getUrlKey()) ?>' + '<?= $escaper->escapeJs($productUrlSuffix) ?>'
+        });
+        <?php endif; ?>
+
+        // JSON-LD BreadcrumbList is emitted exclusively by Panth_AdvancedSEO
+        // (server-side, aggregated into the single #panth-seo @graph). Do NOT
+        // inject a runtime BreadcrumbList here — it would duplicate structured
+        // data and confuse search engines.
+
+        return {breadcrumbs};
+    }
+</script>

@@ -1,0 +1,61 @@
+<?php
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\Cart\ItemOutput;
+use Hyva\Theme\ViewModel\Modal;
+use Magento\Checkout\Block\Cart\Grid;
+use Magento\Checkout\ViewModel\Cart as CartViewModel;
+use Magento\Framework\Escaper;
+
+/** @var Grid $block */
+/** @var ViewModelRegistry $viewModels */
+/** @var Escaper $escaper */
+
+$cartViewModel = $viewModels->require(CartViewModel::class);
+$modalViewModel = $viewModels->require(Modal::class);
+$cartItemOutputViewModel = $viewModels->require(ItemOutput::class);
+
+$mergedCells = ($cartItemOutputViewModel->isItemPriceDisplayBoth() ? 2 : 1);
+$items = $block->getItems();
+$itemCount = count($items);
+?>
+<?= $block->getChildHtml('form_before') ?>
+<form id="form-validate" class="form form-cart"
+    action="<?= $escaper->escapeUrl($block->getUrl('checkout/cart/updatePost')) ?>"
+    method="post" @submit.prevent="postCart">
+    <?= $block->getBlockHtml('formkey') ?>
+
+    <p class="text-sm text-gray-400 mb-3">
+        <?= $escaper->escapeHtml(__('%1 item(s)', $itemCount)) ?>
+    </p>
+
+    <div class="<?= $mergedCells == 2 ? 'cart detailed' : 'cart' ?>">
+        <fieldset id="shopping-cart-table">
+            <legend class="sr-only"><h2><?= $escaper->escapeHtml(__('Shopping Cart Items')) ?></h2></legend>
+            <?php foreach ($items as $item): ?>
+                <?= $block->getItemHtml($item) ?>
+            <?php endforeach ?>
+        </fieldset>
+        <?php if ($block->getPagerHtml()): ?>
+            <div class="mt-4"><?= $block->getPagerHtml() ?></div>
+        <?php endif ?>
+    </div>
+
+    <!-- Action bar: mobile = Update full width, Clear+Gift side by side. Desktop = all one row -->
+    <div class="panth-cart-actions">
+        <button type="submit" name="update_cart_action" value="update_qty"
+                class="btn btn-secondary text-sm panth-cart-action-btn panth-cart-update-btn"
+                data-cart-item-update>
+            <?= $escaper->escapeHtml(__('Update Shopping Cart')) ?>
+        </button>
+
+        <div class="panth-cart-secondary-actions">
+            <?php if ($cartViewModel->isClearShoppingCartEnabled()): ?>
+                <?= $block->getChildHtml('checkout.cart.form.clear') ?>
+            <?php endif ?>
+            <?= $block->getChildHtml('checkout.cart.order.actions') ?>
+        </div>
+    </div>
+</form>
+<?= $block->getChildHtml('shopping.cart.table.after') ?>

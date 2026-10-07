@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <remove src="Panth_MegaMenu::css/source/megamenu-all.less"/>
+    </head>
+    <body>
+        <referenceBlock name="topmenu_generic">
+            <block class="Panth\MegaMenu\Block\Menu"
+                   name="panth.megamenu.hyva"
+                   template="Panth_MegaMenu::menu.phtml"
+                   ifconfig="panth_megamenu/general/enabled">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Panth\MegaMenu\ViewModel\Menu</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <referenceContainer name="header-content">
+            <block class="Magento\Framework\View\Element\Template" name="megamenu.main"/>
+        </referenceContainer>
+
+        <referenceContainer name="before.body.end">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="panth.megamenu.dynamic.css"
+                   template="Panth_MegaMenu::css/dynamic-styles.phtml"
+                   ifconfig="panth_megamenu/general/enabled"/>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,237 @@
+<?php
+/**
+ * Hyva Themes - https://hyva.io
+ * Copyright (c) Hyva Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\HeroiconsOutline;
+use Magento\Framework\Escaper;
+use Magento\LayeredNavigation\Block\Navigation;
+
+// phpcs:disable Generic.Files.LineLength.TooLong
+
+/** @var Navigation $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var HeroiconsOutline $heroicons */
+$heroicons = $viewModels->require(HeroiconsOutline::class);
+?>
+<?php if ($block->canShowBlock()): ?>
+    <?php
+    $activeFilterCount = count($block->getLayer()->getState()->getFilters() ?: []);
+    $clearUrl = $activeFilterCount ? (string) $block->getClearUrl() : '';
+    ?>
+    <div
+        x-data="initLayeredNavigation()"
+        x-init="checkIsMobileResolution()"
+        @resize.window.debounce="checkIsMobileResolution()"
+        @visibilitychange.window.debounce="checkIsMobileResolution()"
+        @keydown.escape.window="closeOnEscape()"
+        @pagehide.window="setOverlay(false)"
+        @pageshow.window="syncOverlay()"
+        x-effect="syncOverlay()"
+        class="panth-layered-nav my-6"
+        role="region"
+        aria-label="<?= $escaper->escapeHtmlAttr(__('Product filters')) ?>"
+    >
+        <button
+            type="button"
+            x-ref="filtersToggle"
+            @click="openDrawer()"
+            class="panth-filters-toggle"
+            aria-controls="filters-content"
+            aria-haspopup="dialog"
+            :aria-expanded="blockOpen ? 'true' : 'false'"
+        >
+            <?= $heroicons->adjustmentsHtml('', 20, 20, ['aria-hidden' => 'true', 'focusable' => 'false']) ?>
+            <span><?= $escaper->escapeHtml(__('Filters')) ?></span>
+            <?php if ($activeFilterCount): ?>
+                <span class="panth-filters-count">
+                    <span aria-hidden="true"><?= (int) $activeFilterCount ?></span>
+                    <span class="sr-only"><?= $escaper->escapeHtml(__('%1 active', $activeFilterCount)) ?></span>
+                </span>
+            <?php endif; ?>
+        </button>
+        <div
+            class="panth-filters-backdrop"
+            :class="{ 'is-open': blockOpen && isMobile }"
+            @click="closeDrawer()"
+            aria-hidden="true"
+        ></div>
+        <div
+            id="filters-content"
+            x-ref="drawer"
+            class="panth-filters-drawer block-content filter-content"
+            :class="{ 'is-open': blockOpen && isMobile }"
+            :role="isMobile ? 'dialog' : null"
+            :aria-modal="isMobile ? 'true' : null"
+            aria-labelledby="filters-heading"
+            @keydown.tab="trapFocus($event)"
+        >
+            <div class="panth-filters-drawer__head">
+                <h2 id="filters-heading" class="block-title">
+                    <span class="panth-filters-title text-md md:text-3xl font-medium uppercase">
+                        <?= $escaper->escapeHtml(__('Shop By')) ?>
+                    </span>
+                </h2>
+                <button
+                    type="button"
+                    x-ref="drawerClose"
+                    @click="closeDrawer()"
+                    class="panth-filters-close"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Close filters')) ?>"
+                >
+                    <?= $heroicons->xHtml('', 24, 24, ['aria-hidden' => 'true', 'focusable' => 'false']) ?>
+                </button>
+            </div>
+            <div class="panth-filters-drawer__body">
+                <?= $block->getChildHtml('state') ?>
+                <a
+                    href="#product-list"
+                    class="sr-only focus:not-sr-only bg-blue-600 text-white px-12 py-4 text-center block rounded-sm"
+                >
+                    <?= $escaper->escapeHtml(__('Skip to product list')) ?>
+                </a>
+                <?php foreach ($block->getFilters() as $filter): ?>
+                    <?php if ($filter->getItemsCount()): ?>
+                        <div
+                            x-data="{
+                                open: false,
+                                id: $id('filter-option')
+                            }"
+                            x-defer="intersect"
+                            class="filter-option card my-4"
+                        >
+                            <h3 :id="`${id}-title`">
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    class="filter-options-title flex justify-between items-center cursor-pointer text-start border-gray-300 w-full"
+                                    :class="{ 'border-b pb-4': open }"
+                                    :aria-controls="`${id}-content`"
+                                    :aria-expanded="open"
+                                >
+                                    <span class="title text-md md:text-lg font-semibold">
+                                        <?= $escaper->escapeHtml(__($filter->getName())) ?>
+                                        <span class="sr-only"> <?= $escaper->escapeHtml(__('filter')) ?></span>
+                                    </span>
+                                    <span class="py-1 px-1 rounded border border-gray-300">
+                                        <?= $heroicons->chevronDownHtml(
+                                            'transition-transform transform duration-300 ease-in-out',
+                                            24,
+                                            24,
+                                            [
+                                                ":class" => "{ 'rotate-180': open }",
+                                                "aria-hidden" => "true",
+                                                "focusable" => "false"
+                                            ]
+                                        ); ?>
+                                    </span>
+                                </button>
+                            </h3>
+                            <template x-if="open">
+                                <div
+                                    :id="`${id}-content`"
+                                    class="filter-options-content pt-3"
+                                >
+                                    <?= /* @noEscape */ $block->getChildBlock('renderer')->setFilterTitle($filter->getName())->render($filter); ?>
+                                </div>
+                            </template>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+            <div class="panth-filters-drawer__foot">
+                <?php if ($clearUrl !== ''): ?>
+                    <a href="<?= $escaper->escapeUrl($clearUrl) ?>" class="btn btn-secondary panth-filters-clear">
+                        <?= $escaper->escapeHtml(__('Clear all')) ?>
+                    </a>
+                <?php endif; ?>
+                <button type="button" class="btn btn-primary panth-filters-apply" @click="closeDrawer()">
+                    <?= $escaper->escapeHtml(__('Apply')) ?>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function initLayeredNavigation() {
+            return {
+                isMobile: false,
+                blockOpen: false,
+                overlayOn: false,
+                checkIsMobileResolution() {
+                    this.isMobile = window.matchMedia('(max-width: 1023.98px)').matches;
+                    if (!this.isMobile) {
+                        this.blockOpen = false;
+                    }
+                },
+                openDrawer() {
+                    this.checkIsMobileResolution();
+                    if (!this.isMobile) {
+                        return;
+                    }
+                    this.blockOpen = true;
+                    this.$nextTick(() => {
+                        window.setTimeout(() => this.$refs.drawerClose.focus(), 60);
+                    });
+                },
+                closeDrawer() {
+                    if (!this.blockOpen) {
+                        return;
+                    }
+                    this.blockOpen = false;
+                    this.$nextTick(() => this.$refs.filtersToggle.focus());
+                },
+                focusableItems() {
+                    const selector = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+                    return Array.from(this.$refs.drawer.querySelectorAll(selector))
+                        .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+                },
+                trapFocus(event) {
+                    if (!this.blockOpen || !this.isMobile) {
+                        return;
+                    }
+                    const items = this.focusableItems();
+                    if (!items.length) {
+                        event.preventDefault();
+                        return;
+                    }
+                    const first = items[0];
+                    const last = items[items.length - 1];
+                    const current = document.activeElement;
+                    if (event.shiftKey && (current === first || !this.$refs.drawer.contains(current))) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && (current === last || !this.$refs.drawer.contains(current))) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                },
+                setOverlay(on) {
+                    if (on === this.overlayOn) {
+                        return;
+                    }
+                    this.overlayOn = on;
+                    [document.documentElement, document.body].forEach((el) => {
+                        el.classList.toggle('panth-overlay-open', on);
+                        el.classList.toggle('panth-filters-open', on);
+                    });
+                },
+                syncOverlay() {
+                    this.setOverlay(this.blockOpen && this.isMobile);
+                },
+                closeOnEscape() {
+                    if (!this.blockOpen || !this.isMobile) {
+                        return;
+                    }
+                    this.closeDrawer();
+                }
+            }
+        }
+    </script>
+<?php endif; ?>

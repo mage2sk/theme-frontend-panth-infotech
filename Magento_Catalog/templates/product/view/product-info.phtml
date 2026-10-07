@@ -1,0 +1,170 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductAttributes;
+use Hyva\Theme\ViewModel\ProductCompare;
+use Hyva\Theme\ViewModel\ProductPage;
+use Hyva\Theme\ViewModel\Wishlist;
+use Magento\Catalog\Model\Product;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var ProductPage $productViewModel */
+$productViewModel = $viewModels->require(ProductPage::class);
+/** @var ProductAttributes $attributesViewModel */
+$attributesViewModel = $viewModels->require(ProductAttributes::class);
+/** @var Product $product */
+$product = $productViewModel->getProduct();
+$productType = $product->getTypeId();
+
+?>
+<div class="card mb-6">
+    <?= $block->getChildHtml('product.info.title') ?>
+
+    <div class="my-2 flex">
+        <?= $block->getChildHtml('product.info.review') ?>
+    </div>
+
+    <?php if ($shortDescription = $productViewModel->getShortDescription()): ?>
+        <div class="mb-4 leading-relaxed product-description prose"><?= /* @noEscape */ $shortDescription ?></div>
+    <?php endif; ?>
+
+    <div class="flex flex-col sm:flex-row justify-between my-4">
+        <div class="inline-flex flex-wrap items-center gap-x-6">
+            <?= $block->getChildHtml("product.info.stockstatus") ?>
+            <?= $block->getChildHtml("product.info.stockqty") ?>
+        </div>
+        <?= $block->getChildHtml("alert.urls") ?>
+    </div>
+
+    <dl id="product-details">
+        <?php foreach ($block->getAttributes() as $attributeConfig):
+            $attribute = $attributesViewModel->getAttributeFromLayoutConfig($attributeConfig); ?>
+            <?php if ($value = $attribute['value'] ?? null): ?>
+                <div class="flex border-t border-gray-300 py-2 last:mb-6 last:border-b attribute-<?= $escaper->escapeHtmlAttr($attribute['code'] ?: '') ?>">
+                    <dt class="w-1/2 text-left text-gray-700 product-detail-label">
+                        <?= $escaper->escapeHtml($attribute['label']) ?>
+                    </dt>
+                    <dd class="w-1/2 ml-2 text-left text-gray-900 product-detail-value">
+                        <?= $escaper->escapeHtml($value) ?>
+                    </dd>
+                </div>
+            <?php endif ?>
+        <?php endforeach; ?>
+    </dl>
+
+    <?= $block->getChildHtml('form_top') ?>
+
+    <?= $block->getChildHtml('product.info.form') ?>
+
+    <style>
+    .panth-buy-section { border-top: 1px solid #E5E5E5; padding-top: 20px; margin-top: 20px; }
+    .panth-buy-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    /* Unwrap the additional-actions container so icons flow inline */
+    .panth-buy-row > div:not([role="group"]):not(.panth-qty-stepper) { display: contents; }
+    .panth-buy-row style { display: none; }
+    .panth-buy-row [role="group"] { display: flex !important; align-items: baseline !important; gap: 8px !important; flex-wrap: nowrap !important; border: none !important; padding: 0 !important; margin: 0 !important; background: none !important; box-shadow: none !important; }
+    .panth-buy-row .price-box { display: flex !important; align-items: baseline !important; gap: 8px !important; flex-wrap: nowrap !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+    .panth-buy-row .price-container { display: inline-flex !important; align-items: baseline !important; gap: 8px !important; flex-direction: row !important; border: none !important; padding: 0 !important; }
+    .panth-buy-row .price-wrapper .price { font-size: 28px !important; font-weight: 800 !important; color: #171717 !important; letter-spacing: -0.5px; line-height: 1 !important; }
+    .panth-buy-row .price-label { display: none !important; }
+    .panth-buy-row .old-price { display: inline-flex !important; align-items: baseline !important; order: -1 !important; }
+    .panth-buy-row .old-price .price { font-size: 15px !important; font-weight: 400 !important; color: #525252 !important; text-decoration: line-through !important; }
+    .panth-buy-row .old-price .price-label { display: none !important; }
+    .panth-buy-row .special-price .price { color: #171717 !important; }
+    .panth-buy-row .price-as_low_as { display: none !important; }
+    .panth-buy-row .minimal-price { display: none !important; }
+    .panth-buy-row .control { margin: 0 !important; }
+    /* Qty Stepper */
+    .panth-qty-stepper { display: inline-flex; align-items: center; border: 1px solid #D4D4D4; border-radius: 8px; overflow: hidden; background: #FFFFFF; height: 44px; }
+    .panth-qty-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 100%; background: none; border: none; color: #525252; cursor: pointer; transition: all 0.15s ease; padding: 0; flex-shrink: 0; }
+    .panth-qty-btn:hover { background: #F0FDFA; color: var(--color-primary-fill, #0F766E); }
+    .panth-qty-btn:active { background: #CCFBF1; }
+    .panth-qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .panth-qty-input { width: 52px !important; height: 100% !important; text-align: center !important; border: none !important; border-left: 1px solid #E5E5E5 !important; border-right: 1px solid #E5E5E5 !important; font-size: 16px !important; font-weight: 600 !important; padding: 0 4px !important; background: #fff !important; color: #171717 !important; -moz-appearance: textfield !important; outline: none !important; }
+    .panth-qty-input::-webkit-outer-spin-button, .panth-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .panth-qty-stepper:focus-within { border-color: var(--color-primary, #0D9488); }
+    .panth-buy-row .towishlist, .panth-buy-row .tocompare, .panth-buy-row [class*="wishlist"], .panth-buy-row [class*="compare"] { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 40px !important; height: 40px !important; border: 1px solid #E5E5E5 !important; border-radius: 10px !important; background: #fff !important; color: #525252 !important; padding: 0 !important; transition: all 0.2s !important; }
+    .panth-buy-row .towishlist:hover, .panth-buy-row .tocompare:hover, .panth-buy-row [class*="wishlist"]:hover, .panth-buy-row [class*="compare"]:hover { border-color: var(--color-primary, #0D9488) !important; color: var(--color-primary-fill, #0F766E) !important; background: #F0FDFA !important; }
+    .panth-buy-row .panth-whatsapp-link { display: inline-flex !important; align-items: center !important; gap: 6px !important; height: 40px !important; padding: 0 12px !important; border: 1px solid #E5E5E5 !important; border-radius: 10px !important; font-size: 13px !important; font-weight: 500 !important; color: #128C7E !important; background: #fff !important; transition: all 0.2s !important; text-decoration: none !important; }
+    .panth-buy-row .panth-whatsapp-link:hover { border-color: #128C7E !important; background: #f0fdf4 !important; }
+    /* Tier Pricing — clickable card rows */
+    .panth-buy-section .tier-price-container { margin: 0 0 16px !important; padding: 0 !important; background: none !important; border: none !important; }
+    .panth-tier-prices { display: flex; flex-direction: column; gap: 6px; }
+    .panth-tier-heading { font-size: 13px; font-weight: 700; color: var(--color-primary-fill, #0F766E); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px; }
+    .panth-tier-row { display: flex; align-items: center; gap: 0; width: 100%; padding: 0; border: 1px solid #E5E5E5; border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.2s ease; font-family: inherit; font-size: 14px; overflow: hidden; }
+    .panth-tier-row:hover { border-color: #0D9488; background: #F0FDFA; }
+    .panth-tier-active, .panth-tier-active:hover { border-color: #0D9488 !important; background: #F0FDFA !important; box-shadow: 0 0 0 1px #0D9488 !important; }
+    .panth-tier-qty { display: flex; align-items: center; justify-content: center; min-width: 42px; padding: 8px 0; align-self: stretch; background: #F0FDFA; color: var(--color-primary-fill, #0F766E); font-weight: 800; font-size: 13px; border-right: 1px solid #E5E5E5; flex-shrink: 0; }
+    .panth-tier-row:hover .panth-tier-qty, .panth-tier-active .panth-tier-qty { background: #CCFBF1; border-right-color: #99F6E4; }
+    .panth-tier-detail { padding: 8px 10px; color: #525252; font-size: 13px; line-height: 1.8; text-align: left; }
+    .panth-tier-detail strong { color: #171717; font-weight: 700; }
+    .panth-tier-detail .panth-tier-price { color: var(--color-primary-fill, #0F766E); font-size: 13px; }
+    .panth-tier-save { display: inline-flex; align-items: center; padding: 2px 8px; margin-left: 4px; background: var(--color-primary-fill, #0F766E); color: #fff; font-size: 12px; font-weight: 700; border-radius: 20px; white-space: nowrap; letter-spacing: 0.3px; vertical-align: middle; }
+    .panth-tier-active .panth-tier-save { background: color-mix(in srgb, var(--color-primary-fill, #0F766E) 82%, #000); }
+    /* ── Mobile overrides (MUST be last to win cascade) ── */
+    @media (max-width: 640px) {
+        .panth-buy-row { gap: 4px !important; }
+        .panth-buy-row > [role="group"] { width: 100%; margin-bottom: 4px; }
+        .panth-buy-row .price-wrapper .price { font-size: 24px !important; }
+        .panth-qty-stepper { height: 44px !important; border-width: 1px !important; border-radius: 8px !important; }
+        .panth-qty-btn { width: 36px !important; color: #525252; }
+        .panth-qty-btn svg { width: 14px !important; height: 14px !important; }
+        .panth-qty-input { width: 44px !important; height: 100% !important; font-size: 16px !important; padding: 0 !important; border-left: 1px solid #E5E5E5 !important; border-right: 1px solid #E5E5E5 !important; }
+        .panth-buy-row .towishlist, .panth-buy-row .tocompare, .panth-buy-row [class*="wishlist"], .panth-buy-row [class*="compare"] { width: 44px !important; height: 44px !important; border-radius: 8px !important; }
+        /* Tier prices */
+        .panth-tier-row { font-size: 13px; }
+        .panth-tier-qty { min-width: 40px; font-size: 13px; }
+        .panth-tier-detail { padding: 8px 10px; font-size: 12px; }
+        .panth-tier-save { padding: 3px 10px; font-size: 12px; margin: 5px 6px 5px 0; }
+    }
+    @media (max-width: 767px) {
+        .panth-buy-row #product-addtocart-button { flex: 1 1 100%; width: 100%; min-width: 0; height: 48px; min-height: 48px; padding: 0 16px; gap: 8px; justify-content: center; border-radius: 8px; font-size: 15px; font-weight: 600; }
+    }
+    </style>
+
+    <div class="panth-buy-section">
+
+        <?php if ($productType === 'bundle'): ?>
+            <span class="sr-only"><?= $escaper->escapeHtml(__('The price depends on the chosen options')) ?></span>
+        <?php endif; ?>
+
+        <?php if ($tierPriceBlock = $block->getChildHtml("product.price.tier")): ?>
+            <div class="tier-price-container">
+                <?= /** @noEscape */ $tierPriceBlock ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="panth-buy-row">
+            <div role="group" aria-label="<?= $escaper->escapeHtmlAttr('Price') ?>">
+                <?= $block->getChildHtml("product.info.price") ?>
+            </div>
+
+            <?php if ($product->isSaleable()): ?>
+                <?= $block->getChildHtml("product.info.quantity") ?>
+                <?= $block->getChildHtml("product.info.addtocart") ?>
+            <?php endif; ?>
+
+            <?= $block->getChildHtml('product.info.additional.actions') ?>
+        </div>
+
+        <?php if ($product->isSaleable() && $block->getChildHtml('addtocart.shortcut.buttons')): ?>
+            <div class="flex mt-4">
+                <?= $block->getChildHtml('addtocart.shortcut.buttons') ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <?= $block->getChildHtml("product.info.additional") ?>
+</div>

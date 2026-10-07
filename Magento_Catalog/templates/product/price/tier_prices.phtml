@@ -1,0 +1,137 @@
+<?php
+/**
+ * Panth Infotech — Tier Prices (override)
+ * Dynamic tier prices that update with custom option selections.
+ */
+
+declare(strict_types=1);
+
+use Magento\Catalog\Pricing\Price\TierPrice;
+use Magento\Catalog\Pricing\Render\PriceBox;
+use Magento\Framework\Escaper;
+
+/** @var PriceBox $block */
+/** @var Escaper $escaper */
+
+/** @var TierPrice $tierPriceModel */
+$tierPriceModel = $block->getPrice();
+$tierPrices = $tierPriceModel->getTierPriceList();
+$product = $block->getSaleableItem();
+$productId = (int) $product->getId();
+
+if (count($tierPrices) === 0) {
+    return '';
+}
+
+$tierData = [];
+foreach ($tierPrices as $index => $price) {
+    $tierData[] = [
+        'qty' => (int) $price['price_qty'],
+        'price' => (float) $price['price']->getValue(),
+        'savePercent' => (float) $tierPriceModel->getSavePercent($price['price']),
+    ];
+}
+?>
+
+<script>
+    function initPanthTierPrices() {
+        return {
+            activeTier: null,
+            tiers: <?= /* @noEscape */ json_encode(
+                $tierData,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            ) ?>,
+            optionSurcharge: 0,
+            init() {
+                // Recalculate whenever the main product price updates
+                const self = this;
+                // Watch for price element changes via MutationObserver
+                const priceEl = document.querySelector('[data-price-type="finalPrice"] .price');
+                if (priceEl) {
+                    new MutationObserver(() => self.recalcFromDOM()).observe(priceEl, { childList: true, characterData: true, subtree: true });
+                }
+                // Also listen for custom option price events
+                window.addEventListener('update-custom-option-prices', () => {
+                    setTimeout(() => self.recalcFromDOM(), 50);
+                });
+                // Listen on document for option changes (bubbles from anywhere)
+                document.addEventListener('change', (e) => {
+                    if (e.target && e.target.classList.contains('product-custom-option')) {
+                        setTimeout(() => self.recalcFromDOM(), 50);
+                    }
+                });
+                document.addEventListener('input', (e) => {
+                    if (e.target && e.target.classList.contains('product-custom-option')) {
+                        setTimeout(() => self.recalcFromDOM(), 100);
+                    }
+                });
+            },
+            recalcFromDOM() {
+                let total = 0;
+                document.querySelectorAll('.product-custom-option').forEach(el => {
+                    const priceAmount = parseFloat(el.dataset.priceAmount || 0);
+                    if (!priceAmount) return;
+                    let active = false;
+                    switch (el.type) {
+                        case 'text': case 'textarea':
+                            active = !!el.value; break;
+                        case 'select-one':
+                            if (el.value && el.selectedOptions[0]) {
+                                const selOpt = el.selectedOptions[0];
+                                total += parseFloat(selOpt.dataset.priceAmount || el.dataset.priceAmount || 0);
+                                return;
+                            }
+                            break;
+                        case 'radio': case 'checkbox':
+                            active = el.checked; break;
+                        case 'hidden':
+                            if (el.classList.contains('hidden-form-file')) active = el.value === 'save_old';
+                            break;
+                        default:
+                            active = !!el.value; break;
+                    }
+                    if (active) total += priceAmount;
+                });
+                // For select options, read from optionConfig via the price display
+                // Simpler: read from displayed product price minus base price
+                this.optionSurcharge = total;
+            },
+            getTierPrice(tierPrice) {
+                return hyva.formatPrice(tierPrice + this.optionSurcharge);
+            },
+            setTierQty(qty) {
+                this.activeTier = qty;
+                const qtyInput = document.querySelector('[name="qty"][form="product_addtocart_form"]')
+                    || document.querySelector('input[name="qty"]');
+                if (qtyInput) {
+                    const alpineData = Alpine.$data(qtyInput);
+                    if (alpineData && alpineData.qty !== undefined) {
+                        alpineData.qty = qty;
+                    }
+                    qtyInput.value = qty;
+                    qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                window.dispatchEvent(new CustomEvent('update-qty-<?= $productId ?>', { detail: qty }));
+            }
+        }
+    }
+</script>
+
+<div class="panth-tier-prices" x-data="initPanthTierPrices()">
+    <p class="panth-tier-heading">Buy more, save more</p>
+    <?php foreach ($tierData as $index => $tier): ?>
+        <button type="button"
+                class="panth-tier-row"
+                :class="{ 'panth-tier-active': activeTier === <?= $tier['qty'] ?> }"
+                @click="setTierQty(<?= $tier['qty'] ?>)"
+                title="<?= $escaper->escapeHtmlAttr(__('Click to buy %1 items and save %2%', $tier['qty'], $tier['savePercent'])) ?>">
+            <span class="panth-tier-qty"><?= $tier['qty'] ?></span>
+            <span class="panth-tier-detail">
+                Buy <strong><?= $tier['qty'] ?></strong> for
+                <strong class="panth-tier-price" x-text="getTierPrice(<?= $tier['price'] ?>)"></strong>
+                each and save <span class="panth-tier-save"><?= $escaper->escapeHtml($block->formatPercent($tier['savePercent'])) ?>%</span>
+            </span>
+        </button>
+    <?php endforeach; ?>
+</div>

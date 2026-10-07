@@ -1,0 +1,107 @@
+/**
+ * Smart Product Badge Components
+ * Pure Tailwind classes using CSS variables from Theme Customizer
+ */
+
+@layer components {
+    /* Badge container - Base */
+    .smart-badge-container {
+        @apply absolute top-0 left-0 z-10 flex p-3 pointer-events-none;
+    }
+
+    /* Badge Layout: Vertical Stack (Default) */
+    .smart-badge-layout-vertical {
+        @apply flex-col;
+    }
+
+    /* Badge Layout: Horizontal Row */
+    .smart-badge-layout-horizontal {
+        @apply flex-row flex-wrap;
+    }
+
+    /* Badge Layout: Grid (2 columns) */
+    .smart-badge-layout-grid {
+        @apply grid grid-cols-2;
+    }
+
+    /* Badge Layout: Compact (Overlapping) */
+    .smart-badge-layout-compact {
+        @apply flex-col -space-y-1;
+    }
+
+    .smart-badge-layout-compact .smart-badge {
+        @apply shadow-xl;
+    }
+
+    /* Base badge styles */
+    .smart-badge {
+        @apply inline-flex items-center gap-1 px-3 py-1.5 text-white text-xs font-bold uppercase tracking-wide rounded-md shadow-lg w-fit;
+    }
+
+    /* Badge gradient backgrounds using Theme Customizer CSS variables */
+    .badge-new {
+        background: linear-gradient(135deg, var(--badge-new), color-mix(in oklch, var(--badge-new), black 15%));
+    }
+
+    .badge-sale {
+        background: linear-gradient(135deg, var(--badge-sale), color-mix(in oklch, var(--badge-sale), black 15%));
+    }
+
+    .badge-hot {
+        background: linear-gradient(135deg, var(--badge-hot), color-mix(in oklch, var(--badge-hot), black 15%));
+    }
+
+    .badge-limited {
+        background: linear-gradient(135deg, var(--badge-limited), color-mix(in oklch, var(--badge-limited), black 15%));
+    }
+
+    .badge-bestseller {
+        background: linear-gradient(135deg, var(--badge-bestseller), color-mix(in oklch, var(--badge-bestseller), black 15%));
+    }
+
+    .badge-trending {
+        background: linear-gradient(135deg, var(--badge-trending), color-mix(in oklch, var(--badge-trending), black 15%));
+    }
+
+    .badge-exclusive {
+        background: linear-gradient(135deg, var(--badge-exclusive), color-mix(in oklch, var(--badge-exclusive), black 15%));
+    }
+
+    .badge-featured {
+        background: linear-gradient(135deg, var(--badge-featured), color-mix(in oklch, var(--badge-featured), black 15%));
+    }
+
+    .badge-stock {
+        background: linear-gradient(135deg, var(--badge-limited), color-mix(in oklch, var(--badge-limited), black 15%));
+    }
+
+    /* Badge animation */
+    .smart-badge-animated {
+        @apply animate-[badgeIn_0.6s_ease-out_both];
+    }
+
+    /* Badge Image Support */
+    .smart-badge .badge-image {
+        @apply h-5 w-5 object-contain;
+    }
+
+    /* FontAwesome Icon Support */
+    .smart-badge .badge-fa-icon {
+        @apply text-base;
+    }
+
+    /* Responsive Badge Sizing */
+    @media (max-width: 640px) {
+        .smart-badge {
+            @apply text-[10px] px-2 py-1;
+        }
+
+        .smart-badge .badge-image {
+            @apply h-4 w-4;
+        }
+
+        .smart-badge .badge-fa-icon {
+            @apply text-sm;
+        }
+    }
+}

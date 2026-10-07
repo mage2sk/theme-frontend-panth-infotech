@@ -1,0 +1,115 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Free Shipping Progress Bar for Minicart
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Panth\Core\ViewModel\HeroIcon;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var ViewModelRegistry $viewModels */
+
+$headerHelper = $this->helper(Panth\ThemeCustomizer\Helper\HeaderConfig::class);
+
+if (!$headerHelper->isFreeShippingProgressEnabled()) {
+    return;
+}
+
+/** @var HeroIcon $heroIcon */
+$heroIcon = $viewModels->require(HeroIcon::class);
+
+$threshold = $headerHelper->getFreeShippingThreshold();
+$message = $headerHelper->getFreeShippingMessage();
+$successMessage = $headerHelper->getFreeShippingSuccessMessage();
+?>
+
+<div x-show="itemsCount > 0" x-cloak
+     x-data="{
+         freeShippingThreshold: <?= (float) $threshold ?>,
+         get subtotalValue() {
+             const subtotal = cart?.subtotal_excluding_tax?.value ?? cart?.subtotalAmount ?? 0;
+             return parseFloat(subtotal) || 0;
+         },
+         get remainingAmount() {
+             return Math.max(0, this.freeShippingThreshold - this.subtotalValue);
+         },
+         get progressPercentage() {
+             if (this.freeShippingThreshold === 0) return 0;
+             return Math.min(100, (this.subtotalValue / this.freeShippingThreshold) * 100);
+         },
+         get isQualified() {
+             return this.subtotalValue >= this.freeShippingThreshold;
+         },
+         get formattedRemaining() {
+             return hyva.formatPrice(this.remainingAmount);
+         }
+     }"
+     class="mb-6 p-6 rounded-2xl shadow-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-darker)]"
+>
+        <!-- Success State -->
+        <template x-if="isQualified">
+            <div class="flex items-center gap-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <?= $heroIcon->check('w-7 h-7 text-white') ?>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-base font-bold text-white leading-relaxed">
+                        <?= $escaper->escapeHtml($successMessage) ?>
+                    </p>
+                </div>
+            </div>
+        </template>
+
+        <!-- Progress State -->
+        <template x-if="!isQualified">
+            <div>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-base font-bold text-white leading-relaxed">
+                            <?php
+                            $messageParts = explode('{amount}', $message);
+                            if (count($messageParts) > 1):
+                                echo $escaper->escapeHtml($messageParts[0]);
+                                ?>
+                                <span x-text="formattedRemaining" class="text-[var(--color-secondary)]"></span>
+                                <?php
+                                echo $escaper->escapeHtml($messageParts[1]);
+                            else:
+                                echo $escaper->escapeHtml($message);
+                            endif;
+                            ?>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="relative w-full h-4 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                    <div
+                        class="absolute top-0 left-0 h-full bg-[var(--color-success)] rounded-full transition-all duration-700 ease-out"
+                        :style="`width: ${progressPercentage}%`"
+                    ></div>
+                </div>
+
+                <!-- Progress Text -->
+                <div class="mt-3 flex justify-between items-center text-sm text-white/90">
+                    <span x-text="`${Math.round(progressPercentage)}% complete`" class="font-semibold"></span>
+                    <span x-text="formattedRemaining + ' to go'" class="font-bold text-[var(--color-secondary)]"></span>
+                </div>
+            </div>
+        </template>
+</div>

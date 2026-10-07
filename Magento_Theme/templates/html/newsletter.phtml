@@ -1,0 +1,106 @@
+<?php
+/**
+ * Newsletter Section - Configurable Colors
+ */
+declare(strict_types=1);
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+/** @var Escaper $escaper */
+/** @var Template $block */
+$footerHelper = $this->helper(Panth\Footer\Helper\Data::class);
+if (!$footerHelper->isNewsletterEnabled()) return;
+
+// Get all newsletter color settings
+$bgColor = $escaper->escapeHtmlAttr($footerHelper->getNewsletterBackgroundColor());
+$titleColor = $escaper->escapeHtmlAttr($footerHelper->getNewsletterTitleColor());
+$textColor = $escaper->escapeHtmlAttr($footerHelper->getNewsletterTextColor());
+$buttonBg = $escaper->escapeHtmlAttr($footerHelper->getNewsletterButtonColor());
+$buttonText = $escaper->escapeHtmlAttr($footerHelper->getNewsletterButtonTextColor());
+$buttonHover = $escaper->escapeHtmlAttr($footerHelper->getNewsletterButtonHoverColor());
+$inputBg = $escaper->escapeHtmlAttr($footerHelper->getNewsletterInputBgColor());
+$inputText = $escaper->escapeHtmlAttr($footerHelper->getNewsletterInputTextColor());
+$inputBorder = $escaper->escapeHtmlAttr($footerHelper->getNewsletterInputBorderColor());
+$inputFocusBorder = $escaper->escapeHtmlAttr($footerHelper->getNewsletterInputFocusBorderColor());
+
+// Get newsletter content
+$title = $footerHelper->getNewsletterTitle() ?: 'Stay in the Loop';
+$subtitle = $footerHelper->getNewsletterSubtitle() ?: 'Subscribe to our newsletter for exclusive deals, new arrivals, and special offers.';
+$placeholder = $footerHelper->getNewsletterPlaceholder();
+$buttonText = $footerHelper->getNewsletterButtonText();
+$benefits = $footerHelper->getNewsletterBenefits();
+?>
+
+<!-- Newsletter Section -->
+<div class="panth-newsletter py-20">
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-12">
+            <h2 class="panth-newsletter-title text-4xl font-bold mb-4">
+                <?= $escaper->escapeHtml($title) ?>
+            </h2>
+            <p class="panth-newsletter-text text-lg max-w-2xl mx-auto">
+                <?= $escaper->escapeHtml($subtitle) ?>
+            </p>
+        </div>
+
+        <form
+            action="<?= $escaper->escapeUrl($block->getUrl('newsletter/subscriber/new')) ?>"
+            method="post"
+            x-data="{ email: '', loading: false, message: '', success: false }"
+            @submit.prevent="
+                if (!email) return;
+                loading = true;
+                fetch($el.action, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'email=' + encodeURIComponent(email) + '&form_key=<?= $escaper->escapeJs($block->getFormKey()) ?>'
+                })
+                .then(r => r.json())
+                .then(data => {
+                    loading = false;
+                    success = true;
+                    message = 'Thank you for subscribing!';
+                    email = '';
+                })
+                .catch(() => {
+                    loading = false;
+                    message = 'Please try again';
+                });
+            "
+            class="max-w-2xl mx-auto"
+        >
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input
+                    type="email"
+                    name="email"
+                    x-model="email"
+                    required
+                    placeholder="<?= $escaper->escapeHtmlAttr($placeholder) ?>"
+                    class="panth-newsletter-input flex-1 px-6 py-4 text-lg border-2 rounded-lg focus:outline-none transition-colors"
+                />
+                <button
+                    type="submit"
+                    :disabled="loading"
+                    class="panth-newsletter-button px-8 py-4 text-lg font-semibold rounded-lg disabled:opacity-50 whitespace-nowrap transition-colors"
+                >
+                    <span x-show="!loading"><?= $escaper->escapeHtml($buttonText) ?></span>
+                    <span x-show="loading" x-cloak>Subscribing...</span>
+                </button>
+            </div>
+
+            <div x-show="message" x-cloak class="mt-4 p-4 rounded-lg text-center" :class="success ? 'panth-newsletter-success' : 'panth-newsletter-error'">
+                <span x-text="message"></span>
+            </div>
+
+            <?php if (!empty($benefits)): ?>
+            <div class="mt-8 flex flex-wrap justify-center gap-6 text-sm">
+                <?php foreach ($benefits as $benefit): ?>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 panth-newsletter-check" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                    <span><?= $escaper->escapeHtml($benefit) ?></span>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </form>
+    </div>
+</div>

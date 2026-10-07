@@ -1,0 +1,153 @@
+<?php
+/**
+ * Panth Infotech — Qty Stepper with +/- buttons (override)
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Hyva\Theme\ViewModel\ProductStockItem;
+use Magento\Catalog\Block\Product\View;
+use Magento\Catalog\Model\Product;
+use Magento\Framework\Escaper;
+
+// phpcs:disable Generic.WhiteSpace.ScopeIndent.Incorrect
+
+/** @var View $block */
+/** @var Escaper $escaper */
+/** @var HyvaCsp $hyvaCsp */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var Product $product */
+$product = $block->getProduct();
+
+/** @var ProductStockItem $stockItemViewModel */
+$stockItemViewModel = $viewModels->require(ProductStockItem::class);
+$minSalesQty = $stockItemViewModel->getMinSaleQty($product);
+$maxSalesQty = $stockItemViewModel->getMaxSaleQty($product);
+$defaultQty = $block->getProductDefaultQty() * 1;
+
+$step = $stockItemViewModel->getQtyIncrements($product)
+    ? $stockItemViewModel->getQtyIncrements($product)
+    : null;
+
+if ($step) {
+    $minSalesQty = ceil($minSalesQty / $step) * $step;
+    $maxSalesQty = floor($maxSalesQty / $step) * $step;
+    $defaultQty = ceil($defaultQty / $step) * $step;
+}
+
+$maxSalesQtyLength = ($maxSalesQty ? strlen((string) $maxSalesQty) : 4)
+    + ((int) $stockItemViewModel->isQtyDecimal($product));
+
+$stepVal = $step ?: 1;
+$productId = (int) $product->getId();
+?>
+<?php if ($block->shouldRenderQuantity()): ?>
+    <script>
+        function initQtyField() {
+
+            function findPathParam(key) {
+                const baseUrl = (BASE_URL.substring(0, 2) === '//' ? 'http:' : '') + BASE_URL;
+                const baseUrlParts = (new URL(baseUrl)).pathname.replace(/\/$/, '').split('/');
+                const pathParts = window.location.pathname.split('/').slice(baseUrlParts.length + 3);
+                for (let i = 0; i < pathParts.length; i += 2) {
+                    if (pathParts[i] === key && pathParts.length > i) {
+                        return pathParts[i + 1];
+                    }
+                }
+            }
+
+            return {
+                qty: <?= /** @noEscape */ $defaultQty ?>,
+                itemId: (new URLSearchParams(window.location.search)).get('id') || findPathParam('id'),
+                productId: '<?= $productId ?>',
+                step: <?= /** @noEscape */ $stepVal ?>,
+                minQty: <?= /** @noEscape */ $minSalesQty ?: 1 ?>,
+                maxQty: <?= /** @noEscape */ $maxSalesQty ?: 10000 ?>,
+                init() {
+                    this.$dispatch('update-qty-<?= $productId ?>', this.qty);
+                },
+                onGetCartData() {
+                    const data = this.$event.detail.data;
+                    const cart = data && data.data && data.data.cart;
+                    if (this.itemId && cart && cart.items) {
+                        const cartItem = cart.items.find((item) => {
+                            return item.item_id === this.itemId && item.product_id === this.productId;
+                        });
+                        if (cartItem && cartItem.qty) {
+                            this.qty = cartItem.qty;
+                            this.$dispatch('update-qty-' + this.productId, this.qty);
+                        }
+                    }
+                },
+                onInput() {
+                    this.qty = hyva.safeParseNumber(this.$event.target.value);
+                    this.$dispatch('update-qty-<?= $productId ?>', this.qty);
+                },
+                decrement() {
+                    const newQty = this.qty - this.step;
+                    if (newQty >= this.minQty) {
+                        this.qty = newQty;
+                        this.$dispatch('update-qty-<?= $productId ?>', this.qty);
+                    }
+                },
+                increment() {
+                    const newQty = this.qty + this.step;
+                    if (newQty <= this.maxQty) {
+                        this.qty = newQty;
+                        this.$dispatch('update-qty-<?= $productId ?>', this.qty);
+                    }
+                }
+            };
+        }
+        window.addEventListener('alpine:init', () => Alpine.data('initQtyField', initQtyField), {once: true})
+    </script>
+    <?php $hyvaCsp->registerInlineScript() ?>
+
+    <?php if ($product->isSaleable()): ?>
+        <label
+            for="qty[<?= $productId ?>]"
+            class="sr-only"
+        ><?= $escaper->escapeHtml(__('Quantity')) ?></label>
+
+        <div class="panth-qty-stepper" x-data="initQtyField" @private-content-loaded.window="onGetCartData">
+            <button type="button"
+                    class="panth-qty-btn panth-qty-minus"
+                    @click="decrement()"
+                    :disabled="qty <= minQty"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Decrease quantity')) ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <input
+                id="qty[<?= $productId ?>]"
+                name="qty"
+                form="product_addtocart_form"
+                value="<?= $block->getProductDefaultQty() * 1 ?>"
+                class="panth-qty-input"
+                <?php if ($stockItemViewModel->isQtyDecimal($product)): ?>
+                    type="text"
+                    pattern="[0-9]+(\.[0-9]{1,<?= /** @noEscape */ $maxSalesQtyLength ?>})?"
+                    inputmode="decimal"
+                <?php else: ?>
+                    type="number"
+                    pattern="[0-9]{0,<?= /** @noEscape */ $maxSalesQtyLength ?>}"
+                    inputmode="numeric"
+                    <?php if ($minSalesQty): ?>min="<?= /** @noEscape */ $minSalesQty ?>"<?php endif; ?>
+                    <?php if ($maxSalesQty): ?>max="<?= /** @noEscape */ $maxSalesQty ?>"<?php endif; ?>
+                    <?php if ($step): ?>step="<?= /** @noEscape */ $step ?>"<?php endif; ?>
+                <?php endif; ?>
+                :value="qty"
+                @input="onInput"
+            >
+            <button type="button"
+                    class="panth-qty-btn panth-qty-plus"
+                    @click="increment()"
+                    :disabled="qty >= maxQty"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Increase quantity')) ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>

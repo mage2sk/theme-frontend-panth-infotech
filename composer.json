@@ -1,0 +1,75 @@
+{
+    "name": "mage2kishan/theme-frontend-panth-infotech",
+    "description": "Hyva child theme Panth/Infotech for Magento 2, based on the Hyva/default parent theme.",
+    "type": "magento2-theme",
+    "version": "1.0.20",
+    "license": "proprietary",
+    "keywords": [
+        "magento2",
+        "magento2-theme",
+        "hyva",
+        "hyva-child-theme",
+        "tailwindcss",
+        "panth",
+        "panth-infotech"
+    ],
+    "homepage": "https://kishansavaliya.com",
+    "support": {
+        "email": "kishansavaliyakb@gmail.com",
+        "source": "https://kishansavaliya.com"
+    },
+    "authors": [
+        {
+            "name": "Kishan Savaliya",
+            "email": "kishansavaliyakb@gmail.com",
+            "homepage": "https://kishansavaliya.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0",
+        "magento/framework": "^103.0",
+        "mage2kishan/module-core": "^1.0",
+        "mage2kishan/module-advanced-seo": "^1.0",
+        "mage2kishan/module-banner-slider": "^1.0",
+        "mage2kishan/module-cachemanager": "^1.0",
+        "mage2kishan/module-checkout-extended": "^1.0",
+        "mage2kishan/module-checkout-success": "^1.0",
+        "mage2kishan/module-corewebvitals": "^1.0",
+        "mage2kishan/module-custom-options": "^1.0",
+        "mage2kishan/module-dynamic-forms": "^1.0",
+        "mage2kishan/module-faq": "^1.0",
+        "mage2kishan/module-footer": "^1.0",
+        "mage2kishan/module-imageoptimizer": "^1.0",
+        "mage2kishan/module-live-activity": "^1.0",
+        "mage2kishan/module-low-stock-notification": "^1.0",
+        "mage2kishan/module-mega-menu": "^1.0.18",
+        "mage2kishan/module-not-found-page": "^1.0",
+        "mage2kishan/module-order-attachments": "^1.0",
+        "mage2kishan/module-pagebuilder-ai": "^1.0",
+        "mage2kishan/module-performance-optimizer": "^1.0",
+        "mage2kishan/module-price-drop-alert": "^1.0",
+        "mage2kishan/module-product-attachments": "^1.0",
+        "mage2kishan/module-product-slider": "^1.0",
+        "mage2kishan/module-productgallery": "^1.0",
+        "mage2kishan/module-producttabs": "^1.0",
+        "mage2kishan/module-quickview": "^1.0",
+        "mage2kishan/module-search-autocomplete": "^1.0",
+        "mage2kishan/module-smart-badge": "^1.0",
+        "mage2kishan/module-testimonials": "^1.0",
+        "mage2kishan/module-theme-customizer": "^1.0",
+        "mage2kishan/module-whatsapp": "^1.0",
+        "mage2kishan/module-zipcode-validation": "^1.0",
+        "mage2kishan/module-malware-scanner": "^1.0",
+        "mage2kishan/module-advanced-contact-us": "^1.0",
+        "mage2kishan/module-advancedcart": "^1.0"
+    },
+    "suggest": {
+        "hyva-themes/magento2-default-theme": "Required parent theme — Hyva default (^1.0)"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ]
+    }
+}

@@ -1,0 +1,171 @@
+/* ========================================
+   Advanced Cart Styles
+   ======================================== */
+
+/* Product image - override Magento's responsive image wrapper */
+.panth-cart-item .product-item-photo {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-lg, 0.75rem);
+    overflow: hidden;
+    background: #fff;
+}
+.panth-cart-item .product-item-photo img,
+.panth-cart-item .product-item-photo .product-image-photo {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    max-width: none;
+    border-radius: var(--radius-lg, 0.75rem);
+}
+.panth-cart-item .product-item-photo .product-image-container {
+    width: 80px;
+    height: 80px;
+    display: block;
+}
+.panth-cart-item .product-item-photo .product-image-wrapper {
+    padding-bottom: 0 !important;
+    height: 80px;
+    overflow: hidden;
+}
+
+/* Qty stepper - unified component */
+.panth-qty-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.panth-qty-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg, 0.5rem);
+    border: 1px solid var(--color-gray-300, #D4D4D4);
+    background: var(--color-surface, #fff);
+    color: var(--color-fg, #171717);
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0;
+}
+.panth-qty-btn svg {
+    width: 18px;
+    height: 18px;
+}
+.panth-qty-btn:hover {
+    border-color: var(--color-primary, #0D9488);
+    color: var(--color-primary, #0D9488);
+    background: color-mix(in oklch, var(--color-primary) 5%, #fff);
+}
+.panth-qty-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+.panth-qty-btn:disabled:hover {
+    border-color: var(--color-gray-300, #D4D4D4);
+    color: var(--color-fg, #171717);
+    background: var(--color-surface, #fff);
+}
+.panth-qty-val,
+input.panth-qty-val {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-fg, #111827);
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-gray-300, #D4D4D4);
+    border-radius: var(--radius-lg, 0.5rem);
+    padding: 0;
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s;
+}
+.panth-qty-val::-webkit-outer-spin-button,
+.panth-qty-val::-webkit-inner-spin-button,
+input.panth-qty-val::-webkit-outer-spin-button,
+input.panth-qty-val::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    display: none;
+}
+.panth-qty-val:focus {
+    outline: none;
+    border-color: var(--color-primary, #0D9488);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-primary) 15%, transparent);
+}
+
+/* Item action buttons inline */
+.panth-cart-item .item-actions,
+.panth-cart-item .item-actions > *,
+.panth-cart-item .item-actions > div {
+    display: inline-flex;
+    align-items: center;
+}
+.panth-cart-item .item-actions {
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+/* Mobile: smaller item buttons */
+@media (max-width: 639px) {
+    .panth-cart-item .product-item-photo,
+    .panth-cart-item .product-item-photo img,
+    .panth-cart-item .product-item-photo .product-image-photo,
+    .panth-cart-item .product-item-photo .product-image-container {
+        width: 64px;
+        height: 64px;
+    }
+    .panth-cart-item .product-item-photo .product-image-wrapper {
+        height: 64px;
+    }
+    .panth-cart-item .btn.p-2 {
+        padding: 6px;
+    }
+    .panth-cart-item .btn.p-2 svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* Cart action bar - responsive */
+@media (max-width: 639px) {
+    .panth-cart-update-btn {
+        flex: 1 1 100%;
+    }
+    .panth-cart-secondary-actions {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+    .panth-cart-secondary-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+@media (min-width: 640px) {
+    .panth-cart-secondary-actions {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 1023.98px), (pointer: coarse) {
+    .cart-drawer-item-action {
+        position: relative;
+    }
+
+    .cart-drawer-item-action::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 44px;
+        height: 44px;
+        transform: translate(-50%, -50%);
+    }
+}

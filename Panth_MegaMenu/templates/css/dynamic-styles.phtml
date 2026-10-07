@@ -1,0 +1,18 @@
+<?php
+/**
+ * Panth MegaMenu - Dynamic CSS from admin config
+ * Uses simple Template block (not Menu block) to avoid duplicate menu rendering
+ */
+
+/** @var \Magento\Framework\View\Element\Template $block */
+$om = \Magento\Framework\App\ObjectManager::getInstance(); // phpcs:ignore
+$helper = $om->get(\Panth\MegaMenu\Helper\Data::class);
+$customCss = $helper->getCustomCss();
+$customJs = $helper->getCustomJs();
+?>
+<?php if ($customCss): ?>
+<style><?= /* @noEscape */ str_ireplace('</style', '<\/style', (string) $customCss) ?></style>
+<?php endif; ?>
+<?php if ($customJs): ?>
+<script><?= /* @noEscape */ str_ireplace('</script', '<\/script', (string) $customJs) ?></script>
+<?php endif; ?>

@@ -1,0 +1,134 @@
+:root {
+    --ds-field-gap: 16px;
+    --ds-group-gap: 24px;
+    --ds-section-gap: 40px;
+}
+
+@media (min-width: 768px) {
+    :root {
+        --ds-section-gap: 64px;
+    }
+}
+
+body:not(.checkout-index-index) form .field:not(.choice) > label,
+body:not(.checkout-index-index) form .field:not(.choice) > .label {
+    color: var(--ds-text);
+    display: block;
+    font-size: var(--ds-small);
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+body:not(.checkout-index-index) form .field {
+    margin-top: 0;
+}
+
+body:not(.checkout-index-index) form .field.field-reserved {
+    --reserved-space: var(--ds-field-gap);
+}
+
+body:not(.checkout-index-index) form .field:not(.field-reserved):not(.choice) + .field:not(.choice) {
+    margin-top: var(--ds-field-gap);
+}
+
+body:not(.checkout-index-index) form :is(.field .messages, .field-error, .mage-error) {
+    color: var(--ds-danger);
+    font-size: var(--ds-small);
+    line-height: 1.4;
+}
+
+body:not(.checkout-index-index) form :is(.field .note, .field .field-note),
+.password-strength-meter {
+    color: var(--ds-muted);
+    font-size: var(--ds-small);
+    line-height: 1.4;
+}
+
+body:not(.checkout-index-index) form fieldset.card {
+    margin-block: var(--ds-group-gap);
+}
+
+body:not(.checkout-index-index) form fieldset ~ fieldset {
+    margin-top: var(--ds-group-gap);
+}
+
+body:not(.checkout-index-index) #form-validate > .md\:grid {
+    column-gap: var(--ds-group-gap);
+}
+
+body:not(.checkout-index-index) form .field .flex:has(> .control > input[name*="password"]) > .control,
+body:not(.checkout-index-index) form .field .control.flex:has(> input[name*="password"]) {
+    flex: 1 1 100%;
+    width: 100%;
+}
+
+body:not(.checkout-index-index) form .field .control.flex > input[name*="password"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+}
+
+body:not(.checkout-index-index) form .field .control.flex > input[name*="password"] + button {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+:root body .panth-newsletter input[type="email"] {
+    border-radius: var(--ds-radius-md);
+    font-size: 16px;
+    height: var(--ds-input-height);
+    min-height: var(--ds-input-height);
+    padding-block: 0;
+}
+
+.cms-page-view .column.main,
+.cms-page-view .column.main :is(p, li) {
+    font-size: var(--ds-body);
+    line-height: 1.5;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main h2 {
+    font-size: var(--ds-h2);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    margin-top: 40px;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main h3 {
+    font-size: var(--ds-h3);
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    margin-top: 32px;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main :is(h2, h3):first-child {
+    margin-top: 0;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main :is(img, video, iframe) {
+    height: auto;
+    max-width: 100%;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main table:not(.table-wrapper table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.cms-page-view:not(.cms-index-index) .column.main > :is([data-content-type="row"], .widget, section) + :is([data-content-type="row"], .widget, section) {
+    margin-top: var(--ds-section-gap);
+}
+
+@media (max-width: 767px) {
+    .customer-account-create .registration-container {
+        padding-inline: 0;
+    }
+
+    :is(.customer-account-create, .customer-account-login, .customer-account-forgotpassword, .customer-account-createpassword) .column.main .card {
+        padding: 16px;
+    }
+}

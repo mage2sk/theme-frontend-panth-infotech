@@ -1,0 +1,61 @@
+<?php
+/**
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Hyva\Theme\Model\ViewModelRegistry $viewModels
+ */
+
+use Hyva\Theme\ViewModel\Navigation;
+
+if ($block->getRequest()->getFullActionName() === 'panth_menu_preview_index'
+    && !$block instanceof \Panth\MegaMenu\Block\Preview
+) {
+    $block->setData('cache_lifetime', null);
+    return;
+}
+
+$helper = $block->getMenuHelper();
+$maxDepth = (int) ($helper->getMaxDepth() ?: 5);
+$menuTree = $block->getCurrentMenuTree();
+$menu = $block->getCurrentMenu();
+$source = 'menu';
+
+if (empty($menuTree)) {
+    /** @var Navigation $navigation */
+    $navigation = $viewModels->require(Navigation::class, $block);
+    $menuTree = $navigation->getNavigation($maxDepth);
+    $block->setData('cache_tags', $navigation->getIdentities());
+    $source = 'category';
+    if (empty($menuTree)) {
+        return;
+    }
+}
+
+$hasIdentifier = (bool) $block->getData('menu_identifier');
+$menuCss = $menu ? trim((string) $menu->getCustomCss()) : '';
+
+$block->setData('pmm_items', $menuTree);
+$block->setData('pmm_config', [
+    'source' => $source,
+    'preview' => $block instanceof \Panth\MegaMenu\Block\Preview,
+    'renderer' => $block->getMenuViewModel()->getMenuRenderer(),
+    'menu' => $menu,
+    'max_depth' => $maxDepth,
+    'show_icons' => (bool) $helper->showIcons(),
+    'show_images' => (bool) $helper->showImages(),
+    'show_count' => (bool) $helper->showCategoryCount(),
+    'enable_blocks' => (bool) $helper->isCustomBlocksEnabled(),
+    'hover_delay' => (int) $helper->getHoverIntentDelay(),
+    'hover_effect' => (string) ($helper->getHoverEffect() ?: 'underline'),
+    'animation' => (string) ($helper->getAnimationType() ?: 'slide'),
+    'speed' => (int) $helper->getAnimationDuration(),
+    'mobile_position' => (string) ($helper->getMobilePosition() ?: 'left'),
+    'breakpoint' => 1023,
+    'toggle_label' => ($hasIdentifier && $menu) ? (string) $menu->getTitle() : '',
+    'nav_label' => ($hasIdentifier && $menu) ? (string) $menu->getTitle() : (string) __('Main menu'),
+    'css_class' => $menu ? (string) $menu->getCssClass() : '',
+    'custom_css' => $menuCss,
+    'js_url' => $block->getViewFileUrl('Panth_MegaMenu::js/pmm.js'),
+]);
+?>
+<?= /* @noEscape */ $block->fetchView($block->getTemplateFile('Panth_MegaMenu::pmm/render.phtml')) ?>

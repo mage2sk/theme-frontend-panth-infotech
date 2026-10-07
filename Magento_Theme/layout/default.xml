@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+
+        <!-- Note: Panth MegaMenu is configured in app/code/Panth/MegaMenu/view/frontend/layout/default_hyva.xml -->
+        <!-- It adds a block inside topmenu_generic which is already in header-content -->
+        <!-- No additional configuration needed here -->
+
+        <!-- Add Free Shipping Progress to Minicart -->
+        <referenceBlock name="cart-drawer">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="cart-drawer.free-shipping-progress"
+                   template="Magento_Theme::html/cart/free-shipping-progress.phtml"
+                   before="cart-drawer.totals.before"/>
+        </referenceBlock>
+
+        <!-- Custom Color CSS Injection - DISABLED: Now using Tailwind build system -->
+        <!--
+        <referenceContainer name="after.body.start">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="custom.colors"
+                   template="Magento_Theme::html/custom-colors.phtml"
+                   before="-"/>
+        </referenceContainer>
+        -->
+    </body>
+</page>

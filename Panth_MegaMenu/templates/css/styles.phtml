@@ -1,0 +1,26 @@
+<?php
+/**
+ * Panth MegaMenu - Dynamic Admin-Driven CSS
+ * Outputs custom CSS from admin config and any per-menu custom styles.
+ *
+ * @var \Panth\MegaMenu\Block\Menu $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$menuHelper = $block->getMenuHelper();
+$customCss = $menuHelper->getCustomCss();
+$customJs = $menuHelper->getCustomJs();
+?>
+<?php if ($customCss): ?>
+<style>
+/* Admin Panel > Panth MegaMenu > Styling > Custom CSS */
+<?= /** @noEscape */ str_ireplace('</style', '<\/style', (string) $customCss) ?>
+</style>
+<?php endif; ?>
+
+<?php if ($customJs): ?>
+<script>
+/* Admin Panel > Panth MegaMenu > Advanced > Custom JS */
+<?= /** @noEscape */ str_ireplace('</script', '<\/script', (string) $customJs) ?>
+</script>
+<?php endif; ?>

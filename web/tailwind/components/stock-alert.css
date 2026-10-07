@@ -1,0 +1,65 @@
+/**
+ * Low Stock Notification Module - Component Styles
+ * Uses CSS variables from @theme (defined in backend-config.css)
+ * :root fallbacks reference --color-primary for theme consistency
+ */
+
+:root {
+    --lowstocknotification-box-bg: #FAFAFA;
+    --lowstocknotification-box-border: #E5E5E5;
+    --lowstocknotification-text: #404040;
+    --lowstocknotification-heading: #171717;
+    --lowstocknotification-primary: var(--color-primary, #0D9488);
+    --lowstocknotification-btn-from: var(--color-primary, #0D9488);
+    --lowstocknotification-btn-to: var(--color-primary-darker, #0F766E);
+    --lowstocknotification-btn-text: #FFFFFF;
+}
+
+/* Main Component Container */
+.stock-alert-component {
+    background-color: var(--lowstocknotification-box-bg);
+    border-color: var(--lowstocknotification-box-border);
+}
+
+/* Card Borders */
+.stock-alert-card-border {
+    border-color: var(--lowstocknotification-box-border);
+}
+
+/* Gradient Icon Badge */
+.stock-alert-gradient-icon {
+    background: linear-gradient(135deg, var(--lowstocknotification-btn-from) 0%, var(--lowstocknotification-btn-to) 100%);
+    color: var(--lowstocknotification-btn-text);
+}
+
+/* Primary Button */
+.stock-alert-btn {
+    background: linear-gradient(135deg, var(--lowstocknotification-btn-from) 0%, var(--lowstocknotification-btn-to) 100%);
+    color: var(--lowstocknotification-btn-text);
+}
+
+.stock-alert-btn:hover {
+    background: linear-gradient(135deg, var(--lowstocknotification-btn-to) 0%, var(--lowstocknotification-btn-from) 100%);
+}
+
+/* Primary Color Text */
+.stock-alert-primary-color {
+    color: var(--lowstocknotification-primary);
+}
+
+/* Loading Spinner Border */
+.stock-alert-spinner-border {
+    border-top-color: var(--lowstocknotification-primary);
+    border-bottom-color: var(--lowstocknotification-primary);
+}
+
+/* Form Input Focus States */
+.stock-alert-input {
+    transition: all 0.2s;
+}
+
+.stock-alert-input:focus {
+    --tw-ring-color: var(--lowstocknotification-primary);
+    --tw-ring-opacity: 0.2;
+    border-color: var(--lowstocknotification-primary);
+}

@@ -1,0 +1,48 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * Override: Products first on mobile, summary below. Checkout button on mobile top.
+ */
+
+declare(strict_types=1);
+
+use Magento\Checkout\Block\Cart;
+use Magento\Framework\Escaper;
+
+/** @var Cart $block */
+/** @var Escaper $escaper */
+
+$checkoutUrl = $block->getUrl('checkout');
+?>
+
+<div class="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
+    <!-- Cart Items Area (first on mobile, left on desktop) -->
+    <div class="lg:flex-1 min-w-0 order-2 lg:order-1">
+        <?= $block->getChildHtml('form_before') ?>
+        <?= $block->getChildHtml('cart-items') ?>
+        <?= $block->getChildHtml('checkout_cart_widget') ?>
+    </div>
+
+    <!-- Summary Sidebar (second on mobile, right on desktop) -->
+    <div class="order-3 lg:order-2 lg:w-[340px] 2xl:w-[380px] lg:sticky lg:top-4 shrink-0">
+        <div class="card">
+            <h2 class="text-lg font-bold mb-3"><?= $escaper->escapeHtml(__('Summary')) ?></h2>
+            <?= $block->getChildHtml('cart.summary') ?>
+        </div>
+    </div>
+
+    <!-- Mobile Checkout Button (visible only on mobile, above products) -->
+    <div class="order-1 lg:hidden">
+        <a href="<?= $escaper->escapeUrl($checkoutUrl) ?>"
+           class="btn btn-primary w-full py-3 text-base font-semibold justify-center"
+           @click.prevent="proceedToCheckout">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <?= $escaper->escapeHtml(__('Proceed to Checkout')) ?>
+        </a>
+    </div>
+</div>

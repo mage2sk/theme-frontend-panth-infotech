@@ -1,0 +1,4 @@
+node_modules/
+
+# Auto-generated from backend configuration
+generated/backend-config.css

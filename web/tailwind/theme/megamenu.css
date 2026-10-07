@@ -1,0 +1,805 @@
+/**
+ * Panth MegaMenu - Hyva/Tailwind CSS
+ * Comprehensive styles for the MegaMenu Hyva theme integration.
+ * Uses CSS custom properties for admin-driven color/layout control.
+ *
+ * Sections:
+ *  1.  CSS Variable Defaults
+ *  2.  Desktop Navigation Bar
+ *  3.  Mega Panel (full-width dropdown)
+ *  4.  Simple Dropdown
+ *  5.  Hover Effects (6 class-based variants)
+ *  6.  Animations (dropdown open/close)
+ *  7.  Sticky Menu
+ *  8.  Mobile Drawer
+ *  9.  Icons & Images
+ *  10. Responsive Breakpoints
+ *  11. Accessibility
+ *  12. Print
+ *
+ * Copyright (c) Panth Infotech. All rights reserved.
+ */
+
+/* ============================================
+   1. CSS Variable Defaults
+   Colors from theme-config.json take priority via @theme in backend-config.css.
+   These :root values are fallbacks for vars NOT in the JSON config.
+   ============================================ */
+:root {
+    /* Layout/structure (not in JSON) */
+    --menu-dropdown-radius: 0.5rem;
+    --menu-mega-col-gap: 2rem;
+    --menu-col-header-weight: 700;
+    --menu-mobile-overlay: rgba(0, 0, 0, 0.5);
+    --menu-mobile-width: 320px;
+    --menu-mobile-indent: 1rem;
+    --menu-anim-speed: 200ms;
+    --menu-anim-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Color fallbacks for vars not in theme-config.json (use teal palette) */
+    --menu-bg: var(--menu-dropdown-bg, #FFFFFF);
+    --menu-border: var(--menu-dropdown-border, #E5E5E5);
+    --menu-mega-bg: var(--menu-dropdown-bg, #FFFFFF);
+    --menu-mega-border: var(--menu-dropdown-border, #E5E5E5);
+    --menu-mega-shadow: var(--menu-dropdown-shadow, 0 12px 36px -8px rgba(0,0,0,0.15));
+    --menu-col-header-color: var(--menu-subcategory-heading, #0D9488);
+    --menu-col-header-border: var(--menu-subcategory-heading, #0D9488);
+    --menu-sticky-bg: #FFFFFF;
+    --menu-sticky-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    --menu-badge-bg: #DC2626;
+    --menu-badge-text: #FFFFFF;
+    --menu-hover-underline-color: var(--menu-text-hover, #0D9488);
+    --menu-hover-underline-height: 2px;
+    --menu-hover-glow-color: var(--menu-text-hover, #0D9488);
+    --menu-hover-underline-height: 2px;
+
+    /* Glow */
+    --menu-hover-glow-color: rgba(13, 148, 136, 0.35);
+}
+
+/* ============================================
+   2. Desktop Navigation Bar
+   ============================================ */
+.pmenu-nav {
+    position: relative;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    background-color: var(--menu-bg);
+    color: var(--menu-text);
+}
+
+.pmenu-nav-list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.pmenu-nav-item {
+    position: relative;
+}
+
+/* Top-level link */
+.pmenu-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.875rem 1rem;
+    color: var(--menu-text);
+    text-decoration: none;
+    white-space: nowrap;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    transition: color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-link:hover,
+.pmenu-link:focus-visible {
+    color: var(--menu-text-hover);
+}
+
+/* Active page indicator — bottom border */
+.pmenu-nav-item.is-active > .pmenu-link,
+.pmenu-link[aria-current="page"] {
+    color: var(--menu-text-active);
+    font-weight: 700;
+}
+
+.pmenu-nav-item.is-active > .pmenu-link::after,
+.pmenu-link[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    height: var(--menu-hover-underline-height);
+    background-color: var(--menu-text-active);
+    border-radius: 1px;
+}
+
+/* Chevron icon next to links with children */
+.pmenu-chevron {
+    width: 0.75rem;
+    height: 0.75rem;
+    transition: transform var(--menu-anim-speed) var(--menu-anim-easing);
+    flex-shrink: 0;
+}
+
+.pmenu-nav-item:hover > .pmenu-link .pmenu-chevron,
+.pmenu-nav-item.is-open > .pmenu-link .pmenu-chevron {
+    transform: rotate(180deg);
+}
+
+/* ============================================
+   3. Mega Panel (full-width dropdown)
+   ============================================ */
+.pmenu-mega {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    z-index: 60;
+    background-color: var(--menu-mega-bg);
+    border: 1px solid var(--menu-mega-border);
+    border-top: 2px solid var(--menu-col-header-border);
+    border-radius: 0 0 var(--menu-dropdown-radius) var(--menu-dropdown-radius);
+    box-shadow: var(--menu-mega-shadow);
+    padding: 1.5rem 2rem;
+}
+
+/* Grid layout for mega columns */
+.pmenu-mega-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--menu-mega-col-gap);
+}
+
+.pmenu-mega-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.pmenu-mega-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.pmenu-mega-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.pmenu-mega-grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+/* Column */
+.pmenu-mega-col {
+    min-width: 0;
+}
+
+/* Column header (level 1 child) */
+.pmenu-mega-col-header {
+    display: block;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: var(--menu-col-header-weight);
+    font-size: 0.9375rem;
+    color: var(--menu-col-header-color);
+    border-bottom: 2px solid var(--menu-col-header-border);
+    text-decoration: none;
+    transition: color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-mega-col-header:hover {
+    color: var(--menu-text-hover);
+}
+
+/* Decorative underline that animates on column hover */
+.pmenu-mega-col-underline {
+    display: block;
+    width: 2rem;
+    height: 2px;
+    background-color: var(--menu-col-header-border);
+    transition: width 0.3s ease;
+    border-radius: 1px;
+    margin-top: -2px;
+}
+
+.pmenu-mega-col:hover .pmenu-mega-col-underline {
+    width: 3rem;
+}
+
+/* Level 2 items */
+.pmenu-mega-l2 {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pmenu-mega-l2-link {
+    display: block;
+    padding: 0.375rem 0;
+    color: var(--menu-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    transition: color var(--menu-anim-speed) var(--menu-anim-easing),
+                padding-left var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-mega-l2-link:hover {
+    color: var(--menu-text-hover);
+    padding-left: 0.25rem;
+}
+
+/* Level 3+ accordion items */
+.pmenu-mega-l3 {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    padding-left: 0.75rem;
+}
+
+.pmenu-mega-l3-link {
+    display: block;
+    padding: 0.25rem 0;
+    color: var(--menu-text);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    opacity: 0.8;
+    transition: color var(--menu-anim-speed) var(--menu-anim-easing),
+                opacity var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-mega-l3-link:hover {
+    color: var(--menu-text-hover);
+    opacity: 1;
+}
+
+/* CMS block inside mega panel */
+.pmenu-mega-cms img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.375rem;
+}
+
+.pmenu-mega-cms p {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.pmenu-mega-cms a {
+    color: var(--menu-text-hover);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.pmenu-mega-cms a:hover {
+    opacity: 0.8;
+}
+
+/* ============================================
+   4. Simple Dropdown (non-mega)
+   ============================================ */
+.pmenu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 60;
+    min-width: 14rem;
+    background-color: var(--menu-dropdown-bg);
+    border: 1px solid var(--menu-dropdown-border);
+    border-radius: var(--menu-dropdown-radius);
+    box-shadow: var(--menu-dropdown-shadow);
+    padding: 0.5rem 0;
+}
+
+.pmenu-dropdown-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.pmenu-dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pmenu-dropdown-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pmenu-dropdown-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+
+.pmenu-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Dropdown item link */
+.pmenu-dropdown-link {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: var(--menu-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    transition: background-color var(--menu-anim-speed) var(--menu-anim-easing),
+                color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-dropdown-link:hover {
+    color: var(--menu-text-hover);
+    background-color: rgba(13, 148, 136, 0.05);
+}
+
+/* Width variants */
+.pmenu-dropdown-md { min-width: 20rem; max-width: calc(100vw - 2rem); }
+.pmenu-dropdown-lg { min-width: 32rem; max-width: calc(100vw - 2rem); }
+.pmenu-dropdown-xl { min-width: 48rem; max-width: calc(100vw - 2rem); }
+
+/* ============================================
+   5. Hover Effects (class-based, 6 types)
+   ============================================ */
+
+/* 5a. Underline — animated pseudo-element underline */
+.pmenu-hover-underline .pmenu-link::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    height: var(--menu-hover-underline-height);
+    background-color: var(--menu-hover-underline-color);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s var(--menu-anim-easing);
+    border-radius: 1px;
+}
+
+.pmenu-hover-underline .pmenu-link:hover::after,
+.pmenu-hover-underline .pmenu-link:focus-visible::after {
+    transform: scaleX(1);
+}
+
+/* 5b. Fade — opacity change */
+.pmenu-hover-fade .pmenu-link {
+    transition: opacity var(--menu-anim-speed) var(--menu-anim-easing),
+                color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-hover-fade .pmenu-link:hover {
+    opacity: 0.65;
+}
+
+/* 5c. Highlight — background color on hover */
+.pmenu-hover-highlight .pmenu-link {
+    transition: background-color var(--menu-anim-speed) var(--menu-anim-easing),
+                color var(--menu-anim-speed) var(--menu-anim-easing);
+    border-radius: 0.375rem;
+}
+
+.pmenu-hover-highlight .pmenu-link:hover {
+    background-color: rgba(13, 148, 136, 0.08);
+    color: var(--menu-text-hover);
+}
+
+/* 5d. Slide — underline slides in from left */
+.pmenu-hover-slide .pmenu-link::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: var(--menu-hover-underline-height);
+    background-color: var(--menu-hover-underline-color);
+    transition: width 0.3s var(--menu-anim-easing);
+    border-radius: 1px;
+}
+
+.pmenu-hover-slide .pmenu-link:hover::after,
+.pmenu-hover-slide .pmenu-link:focus-visible::after {
+    width: 100%;
+}
+
+/* 5e. Glow — box-shadow glow effect */
+.pmenu-hover-glow .pmenu-link {
+    transition: box-shadow var(--menu-anim-speed) var(--menu-anim-easing),
+                color var(--menu-anim-speed) var(--menu-anim-easing);
+    border-radius: 0.375rem;
+}
+
+.pmenu-hover-glow .pmenu-link:hover {
+    box-shadow: 0 0 16px var(--menu-hover-glow-color);
+    color: var(--menu-text-hover);
+}
+
+/* 5f. Grow — scale transform */
+.pmenu-hover-grow .pmenu-link {
+    transition: transform var(--menu-anim-speed) var(--menu-anim-easing),
+                color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-hover-grow .pmenu-link:hover {
+    transform: scale(1.05);
+    color: var(--menu-text-hover);
+}
+
+/* ============================================
+   6. Animations (dropdown open/close)
+   ============================================ */
+
+/* 6a. Fade */
+.pmenu-anim-fade {
+    opacity: 0;
+    transition: opacity var(--menu-anim-speed) var(--menu-anim-easing);
+    pointer-events: none;
+}
+
+.pmenu-anim-fade.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 6b. Slide down */
+.pmenu-anim-slide {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity var(--menu-anim-speed) var(--menu-anim-easing),
+                transform var(--menu-anim-speed) var(--menu-anim-easing);
+    pointer-events: none;
+}
+
+.pmenu-anim-slide.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* 6c. Grow (scale from top) */
+.pmenu-anim-grow {
+    opacity: 0;
+    transform: scaleY(0.95);
+    transform-origin: top center;
+    transition: opacity var(--menu-anim-speed) var(--menu-anim-easing),
+                transform var(--menu-anim-speed) var(--menu-anim-easing);
+    pointer-events: none;
+}
+
+.pmenu-anim-grow.is-open {
+    opacity: 1;
+    transform: scaleY(1);
+    pointer-events: auto;
+}
+
+/* ============================================
+   7. Sticky Menu
+   ============================================ */
+.pmenu-sticky {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: var(--menu-sticky-bg);
+    transition: transform 0.3s var(--menu-anim-easing),
+                box-shadow 0.3s var(--menu-anim-easing),
+                padding 0.3s var(--menu-anim-easing);
+}
+
+.pmenu-sticky.compact .pmenu-link {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.pmenu-sticky.has-shadow {
+    box-shadow: var(--menu-sticky-shadow);
+}
+
+.pmenu-sticky-hidden {
+    transform: translateY(-100%);
+}
+
+.pmenu-sticky-visible {
+    transform: translateY(0);
+}
+
+/* Spacer to prevent content jump when menu becomes sticky */
+.pmenu-sticky-spacer {
+    display: none;
+}
+
+.pmenu-sticky ~ .pmenu-sticky-spacer {
+    display: block;
+}
+
+/* ============================================
+   8. Mobile Drawer
+   ============================================ */
+
+/* Overlay backdrop */
+.pmenu-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background-color: var(--menu-mobile-overlay);
+    opacity: 0;
+    transition: opacity 0.3s var(--menu-anim-easing);
+    pointer-events: none;
+}
+
+.pmenu-mobile-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Drawer container */
+.pmenu-mobile-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 999;
+    width: var(--menu-mobile-width);
+    max-width: 85vw;
+    background-color: var(--menu-mobile-bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s var(--menu-anim-easing);
+    will-change: transform;
+}
+
+/* Left variant (default) */
+.pmenu-mobile-drawer--left {
+    left: 0;
+    transform: translateX(-100%);
+}
+
+.pmenu-mobile-drawer--left.is-open {
+    transform: translateX(0);
+}
+
+/* Right variant */
+.pmenu-mobile-drawer--right {
+    right: 0;
+    transform: translateX(100%);
+}
+
+.pmenu-mobile-drawer--right.is-open {
+    transform: translateX(0);
+}
+
+/* Drawer header (close button area) */
+.pmenu-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--menu-border);
+    flex-shrink: 0;
+}
+
+/* Scrollable content area */
+.pmenu-mobile-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 0.5rem 0;
+}
+
+/* Mobile nav list */
+.pmenu-mobile-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Mobile link — touch-friendly 44px minimum */
+.pmenu-mobile-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+    color: var(--menu-text);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color var(--menu-anim-speed) var(--menu-anim-easing);
+}
+
+.pmenu-mobile-link:hover,
+.pmenu-mobile-link:active {
+    background-color: rgba(13, 148, 136, 0.05);
+}
+
+/* Active page in mobile */
+.pmenu-mobile-link[aria-current="page"] {
+    color: var(--menu-text-active);
+    font-weight: 700;
+    background-color: rgba(13, 148, 136, 0.05);
+}
+
+/* Accordion toggle button */
+.pmenu-mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--menu-text);
+    padding: 0;
+}
+
+.pmenu-mobile-toggle-icon {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 0.3s var(--menu-anim-easing);
+}
+
+.pmenu-mobile-toggle.is-open .pmenu-mobile-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Accordion expand/collapse */
+.pmenu-mobile-submenu {
+    overflow: hidden;
+}
+
+/* Level indentation */
+.pmenu-mobile-level-1 { padding-left: 0; }
+.pmenu-mobile-level-2 { padding-left: var(--menu-mobile-indent); }
+.pmenu-mobile-level-3 { padding-left: calc(var(--menu-mobile-indent) * 2); }
+.pmenu-mobile-level-4 { padding-left: calc(var(--menu-mobile-indent) * 3); }
+
+/* Reduce font size at deeper levels */
+.pmenu-mobile-level-2 .pmenu-mobile-link { font-size: 0.875rem; }
+.pmenu-mobile-level-3 .pmenu-mobile-link { font-size: 0.8125rem; opacity: 0.85; }
+.pmenu-mobile-level-4 .pmenu-mobile-link { font-size: 0.8125rem; opacity: 0.75; }
+
+/* Alpine x-collapse support */
+.pmenu-mobile-submenu[x-collapse] {
+    overflow: hidden;
+}
+
+/* ============================================
+   9. Icons & Images
+   ============================================ */
+
+/* Icon sizing and alignment */
+.pmenu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+.pmenu-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.pmenu-icon-sm { width: 1rem; height: 1rem; }
+.pmenu-icon-lg { width: 1.5rem; height: 1.5rem; }
+
+/* Image thumbnails in menu items */
+.pmenu-thumb {
+    display: block;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.375rem;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.pmenu-thumb-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+/* Badge positioning */
+.pmenu-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+    background-color: var(--menu-badge-bg);
+    color: var(--menu-badge-text);
+    position: relative;
+    top: -0.125rem;
+    margin-left: 0.375rem;
+    white-space: nowrap;
+}
+
+/* ============================================
+   10. Responsive Breakpoints
+   ============================================ */
+
+/* Mobile: hide desktop nav, show hamburger */
+@media (max-width: 1023px) {
+    .pmenu-nav {
+        display: none !important;
+    }
+
+    .pmenu-mega,
+    .pmenu-dropdown {
+        display: none !important;
+    }
+}
+
+/* Desktop: show nav, hide mobile drawer & hamburger */
+@media (min-width: 1024px) {
+    .pmenu-mobile-overlay,
+    .pmenu-mobile-drawer,
+    .pmenu-mobile-hamburger {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   11. Accessibility
+   ============================================ */
+
+/* Focus outlines */
+.pmenu-nav a:focus-visible,
+.pmenu-nav button:focus-visible,
+.pmenu-mobile-drawer a:focus-visible,
+.pmenu-mobile-drawer button:focus-visible {
+    outline: 2px solid var(--menu-text-hover);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+
+/* Reduced motion — disable animations */
+@media (prefers-reduced-motion: reduce) {
+    .pmenu-nav *,
+    .pmenu-mobile-drawer *,
+    .pmenu-mobile-overlay,
+    .pmenu-sticky {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+    .pmenu-link,
+    .pmenu-dropdown-link,
+    .pmenu-mega-l2-link,
+    .pmenu-mega-l3-link,
+    .pmenu-mobile-link {
+        forced-color-adjust: auto;
+    }
+
+    .pmenu-badge {
+        border: 1px solid;
+    }
+}
+
+/* x-cloak: prevent FOUC on Alpine init */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ============================================
+   12. Print — hide navigation
+   ============================================ */
+@media print {
+    .pmenu-nav,
+    .pmenu-mobile-drawer,
+    .pmenu-mobile-overlay,
+    .pmenu-mobile-hamburger,
+    .pmenu-sticky {
+        display: none !important;
+    }
+}

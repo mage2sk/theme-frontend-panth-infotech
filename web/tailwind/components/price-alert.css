@@ -1,0 +1,165 @@
+/**
+ * Price Drop Alert Module - Component Styles
+ *
+ * Colors are driven by CSS variables from theme-config.json via generate-theme-css.js.
+ * The :root block provides fallbacks so these work even when Tailwind v4
+ * tree-shakes @theme vars not referenced by utility classes.
+ */
+
+:root {
+    --pricedropalert-box-bg: var(--pricedropalert-box-bg, #FAFAFA);
+    --pricedropalert-box-border: var(--pricedropalert-box-border, #E5E5E5);
+    --pricedropalert-text: var(--pricedropalert-text, #404040);
+    --pricedropalert-heading: var(--pricedropalert-heading, #171717);
+    --pricedropalert-primary: var(--pricedropalert-primary, #0D9488);
+    --pricedropalert-btn-from: var(--pricedropalert-btn-from, #0D9488);
+    --pricedropalert-btn-to: var(--pricedropalert-btn-to, #14B8A6);
+    --pricedropalert-btn-text: var(--pricedropalert-btn-text, #FFFFFF);
+}
+
+/* Card Container */
+.price-alert-card {
+    background: white;
+    border: 1px solid var(--pricedropalert-box-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Gradient Header */
+.price-alert-header-gradient {
+    background: linear-gradient(135deg, var(--pricedropalert-btn-from) 0%, var(--pricedropalert-btn-to) 100%);
+}
+
+/* Primary Color Text */
+.price-alert-primary-color {
+    color: var(--pricedropalert-primary);
+}
+
+/* Text Colors */
+.price-alert-text-heading {
+    color: var(--pricedropalert-heading);
+}
+
+.price-alert-text-body {
+    color: var(--pricedropalert-text);
+}
+
+.price-alert-text-muted {
+    color: #525252;
+}
+
+/* Current Price Card */
+.price-alert-price-card {
+    background: var(--pricedropalert-box-bg);
+    border: 1px solid var(--pricedropalert-box-border);
+}
+
+/* Price Tag Icon */
+.price-alert-price-tag-icon {
+    color: var(--pricedropalert-primary);
+    opacity: 0.3;
+}
+
+/* Target Price Card (subscribed state) */
+.price-alert-target-card {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.05), rgba(20, 184, 166, 0.08));
+    border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+.price-alert-target-label {
+    color: var(--pricedropalert-primary);
+}
+
+.price-alert-target-value {
+    color: var(--pricedropalert-heading);
+}
+
+/* Form Labels */
+.price-alert-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--pricedropalert-heading);
+    margin-bottom: 0.5rem;
+}
+
+/* Form Inputs */
+.price-alert-input-field {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--pricedropalert-box-border);
+    border-radius: 0.75rem;
+    background: white;
+    color: var(--pricedropalert-heading);
+    transition: all 0.2s ease;
+}
+
+.price-alert-input-field::placeholder {
+    color: #a3a3a3;
+}
+
+.price-alert-input-field:focus {
+    outline: none;
+    border-color: var(--pricedropalert-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+/* Primary CTA Button */
+.price-alert-btn {
+    background: linear-gradient(135deg, var(--pricedropalert-btn-from) 0%, var(--pricedropalert-btn-to) 100%);
+    color: var(--pricedropalert-btn-text);
+    border: none;
+}
+
+.price-alert-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--pricedropalert-btn-to) 0%, var(--pricedropalert-btn-from) 100%);
+    box-shadow: 0 8px 25px -5px rgba(13, 148, 136, 0.4);
+}
+
+/* Unsubscribe Button */
+.price-alert-unsubscribe-btn {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.price-alert-unsubscribe-btn:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+/* Check Icons in Trust Badges */
+.price-alert-check-icon {
+    color: var(--pricedropalert-primary);
+}
+
+/* Loading Spinner */
+.price-alert-spinner {
+    border: 3px solid var(--pricedropalert-box-border);
+    border-top-color: var(--pricedropalert-primary);
+}
+
+/* Toast Notifications */
+.price-alert-toast-success {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+}
+
+.price-alert-toast-error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+/* Responsive: stack trust badges vertically on very small screens */
+@media (max-width: 374px) {
+    .price-alert-label {
+        font-size: 0.75rem;
+    }
+
+    .price-alert-input-field {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+}

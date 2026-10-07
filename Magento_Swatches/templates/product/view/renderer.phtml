@@ -1,0 +1,179 @@
+<?php
+/**
+ * Panth Infotech — Configurable Swatch Renderer (override)
+ * Clean card layout with inline label + selected value + swatch options.
+ */
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\SwatchRenderer;
+use Magento\Framework\Escaper;
+use Magento\Swatches\Block\Product\Renderer\Configurable;
+use Magento\Swatches\ViewModel\Product\Renderer\Configurable as ConfigurableViewModel;
+
+// phpcs:disable Generic.Files.LineLength.TooLong
+
+/** @var Configurable $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var ConfigurableViewModel $configurableViewModel */
+$configurableViewModel = $viewModels->require(ConfigurableViewModel::class);
+
+/** @var SwatchRenderer $swatchRendererViewModel */
+$swatchRendererViewModel = $viewModels->require(SwatchRenderer::class);
+
+$product = $block->getProduct();
+$productId = $product->getId();
+
+$attributes = $block->decorateArray($block->getAllowAttributes());
+
+$layout = $block->getLayout();
+$swatchItemBlock = $layout->getBlock('product.swatch.item');
+$swatchItemBlock->setData('product_id', $productId);
+
+$tooltipBlockHtml = $block->getBlockHtml('product.swatch.tooltip');
+?>
+<?php if ($product->isSaleable() && count($attributes)): ?>
+    <script>
+        function initConfigurableSwatchOptions_<?= (int) $productId ?>() {
+            const configurableOptionsComponent = initConfigurableOptions(
+                '<?= (int) $productId ?>',
+                <?= /* @noEscape */ $block->getJsonConfig() ?>
+            );
+            const swatchOptionsComponent = initSwatchOptions(
+                <?= /* @noEscape */ $block->getJsonSwatchConfig() ?>
+            );
+
+            return Object.assign(
+                configurableOptionsComponent,
+                swatchOptionsComponent
+            );
+        }
+    </script>
+
+    <style>
+    /* Panth — Product Options Container */
+    .panth-options-card { margin: 0; padding: 0; }
+    .panth-options-card .panth-option-row { padding: 8px 0; border-top: 1px solid var(--color-gray-300, #D4D4D4); }
+    .panth-options-card .panth-option-row:last-child { border-bottom: 1px solid var(--color-gray-300, #D4D4D4); }
+    .panth-option-header { display: inline-flex; align-items: baseline; gap: 8px; margin-right: 16px; vertical-align: middle; }
+    .panth-option-label { font-size: 14px; color: var(--color-gray-700, #171717); }
+    .panth-option-value { font-size: 14px; font-weight: 700; color: var(--color-fg, #171717); }
+
+    /* Swatch list — inline next to label */
+    .panth-swatch-list { display: inline-flex !important; flex-wrap: wrap; gap: 6px; vertical-align: middle; min-height: 36px; align-items: center; }
+    .panth-swatch-list > div { display: contents; }
+    .panth-swatch-list > div > div { display: contents; }
+    .panth-swatch-list > template + div { display: contents; }
+
+    /* Text / Size Swatches */
+    .panth-swatch-list .swatch-option {
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        min-width: 40px !important; height: 36px !important; padding: 0 12px !important;
+        border: 1.5px solid var(--color-gray-300, #D4D4D4) !important; border-radius: 8px !important;
+        color: var(--color-gray-700, #171717) !important;
+        font-size: 13px !important; font-weight: 600 !important;
+        cursor: pointer !important; transition: all 0.15s ease !important;
+        box-shadow: none !important; margin: 0 !important;
+        position: relative !important;
+    }
+    /* Only set white bg on text swatches (not color swatches) */
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6) { background: #fff !important; }
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6):hover { border-color: #0D9488 !important; color: var(--color-primary-darker, #0F766E) !important; background: color-mix(in srgb, var(--color-primary, #0D9488) 7%, #fff) !important; }
+
+    /* Selected state — text swatches */
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6).ring,
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6).ring-primary\/50,
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6).ring-primary\/75,
+    .panth-swatch-list .swatch-option:not(.w-6):not(.h-6).border-gray-100 { border-color: var(--color-primary-darker, #0F766E) !important; background: color-mix(in srgb, var(--color-primary, #0D9488) 7%, #fff) !important; color: #0D9488 !important; box-shadow: 0 0 0 1px var(--color-primary, #0D9488) !important; }
+
+    /* Color Swatches — round, preserve inline background-color */
+    .panth-swatch-list .swatch-option.w-6,
+    .panth-swatch-list .swatch-option.h-6 { width: 32px !important; height: 32px !important; min-width: 32px !important; border-radius: 50% !important; padding: 0 !important; border: 2px solid var(--color-gray-300, #D4D4D4) !important; }
+    .panth-swatch-list .swatch-option.w-6:hover,
+    .panth-swatch-list .swatch-option.h-6:hover { transform: scale(1.15); border-color: #525252 !important; }
+    /* Selected state — color swatches */
+    .panth-swatch-list .swatch-option.w-6.ring,
+    .panth-swatch-list .swatch-option.w-6.ring-primary\/50,
+    .panth-swatch-list .swatch-option.w-6.ring-primary\/75,
+    .panth-swatch-list .swatch-option.w-6.border-gray-100,
+    .panth-swatch-list .swatch-option.h-6.ring,
+    .panth-swatch-list .swatch-option.h-6.ring-primary\/50,
+    .panth-swatch-list .swatch-option.h-6.ring-primary\/75,
+    .panth-swatch-list .swatch-option.h-6.border-gray-100 { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary, #0D9488) !important; border-color: transparent !important; }
+
+    /* Disabled swatch */
+    .panth-swatch-list .swatch-option.opacity-50 { opacity: 0.35 !important; cursor: not-allowed !important; }
+
+    /* Dropdown fallback */
+    .panth-option-select { width: 100%; max-width: 240px; height: 38px; padding: 0 12px; border: 1.5px solid var(--color-gray-300, #D4D4D4); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--color-gray-700, #171717); background: #fff; cursor: pointer; transition: border-color 0.15s ease; appearance: auto; }
+    .panth-option-select:focus { border-color: var(--color-primary, #0D9488); outline: none; box-shadow: 0 0 0 1px var(--color-primary, #0D9488); }
+
+    /* Dropdown fallback — inline too */
+    .panth-option-row > div[style*="flex"] { display: inline-block !important; vertical-align: middle; }
+
+    @media (max-width: 640px) {
+        .panth-option-header { display: flex; margin-right: 0; margin-bottom: 6px; }
+        .panth-swatch-list { display: flex !important; }
+        .panth-swatch-list .swatch-option { min-width: 38px !important; height: 34px !important; padding: 0 10px !important; font-size: 12px !important; }
+        .panth-swatch-list .swatch-option.w-6, .panth-swatch-list .swatch-option.h-6 { width: 30px !important; height: 30px !important; min-width: 30px !important; }
+    }
+    </style>
+
+    <div x-data="initConfigurableSwatchOptions_<?= (int) $productId ?>()"
+         @private-content-loaded.window="onGetCartData($event.detail.data)"
+         class="panth-options-card relative"
+         x-defer="intersect"
+    >
+        <?php foreach ($attributes as $attribute): ?>
+            <?php $attributeId = $attribute->getAttributeId(); ?>
+            <?php $productAttribute = $attribute->getProductAttribute(); ?>
+            <?php if ($swatchRendererViewModel->isSwatchAttribute($productAttribute)): ?>
+                <div class="panth-option-row swatch-attribute <?= $escaper->escapeHtmlAttr($productAttribute->getAttributeCode()) ?>">
+                    <div class="panth-option-header">
+                        <span class="panth-option-label"
+                              id="attribute-label-<?= $escaper->escapeHtmlAttr($productId . '-' . $attributeId) ?>"
+                        ><?= $escaper->escapeHtml($productAttribute->getStoreLabel()) ?></span>
+                        <span class="panth-option-value"
+                              x-text="getSwatchText(<?= (int) $attributeId ?>, selectedValues[<?= (int) $attributeId ?>])"
+                        ></span>
+                    </div>
+                    <div class="panth-swatch-list swatch-attribute-options"
+                         role="radiogroup"
+                         aria-label="<?= $escaper->escapeHtmlAttr($productAttribute->getStoreLabel()) ?>">
+                        <template x-for="(item, index) in optionConfig.attributes[<?= (int) $attributeId ?>].options" :key="item.id">
+                            <?= /* @noEscape */ $swatchItemBlock->setData('attribute_id', $attributeId)->toHtml(); ?>
+                        </template>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="panth-option-row">
+                    <div class="panth-option-header">
+                        <label class="panth-option-label"
+                               for="attribute<?= $escaper->escapeHtmlAttr($attributeId) ?>"
+                        ><?= $escaper->escapeHtml($attribute->getProductAttribute()->getStoreLabel()) ?></label>
+                    </div>
+                    <div style="flex:1;display:flex;justify-content:flex-end">
+                        <select name="super_attribute[<?= $escaper->escapeHtmlAttr($attribute->getAttributeId()) ?>]"
+                                id="attribute<?= $escaper->escapeHtmlAttr($attributeId) ?>"
+                                class="panth-option-select super-attribute-select"
+                                x-on:change="changeOption(<?= (int) $attributeId ?>, event.target.value)"
+                                required>
+                            <option value=""><?= $escaper->escapeHtml(__('Choose an Option...')) ?></option>
+                            <template x-for="(item, index) in getAllAttributeOptions(<?= (int) $attributeId ?>)" :key="item.id">
+                                <template x-if="optionIsEnabled(<?= (int) $attributeId ?>, item.id)">
+                                    <option :value="item.id" x-html="item.label"
+                                            :disabled="!optionIsActive(<?= (int) $attributeId ?>, item.id)"
+                                            :selected="selectedValues[<?= $escaper->escapeHtmlAttr($attributeId) ?>] === item.id">
+                                    </option>
+                                </template>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endforeach; ?>
+        <?= /* @noEscape */ $tooltipBlockHtml ?>
+    </div>
+
+<?php endif;?>

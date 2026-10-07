@@ -1,0 +1,169 @@
+<?php
+/**
+ * Footer Section - Simple & Clean
+ */
+declare(strict_types=1);
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+/** @var Escaper $escaper */
+/** @var Template $block */
+$footerHelper = $this->helper(Panth\Footer\Helper\Data::class);
+if (!$footerHelper->isEnabled()) {
+    // Fall back to Hyvä default footer template
+    $defaultTemplate = BP . '/vendor/hyva-themes/magento2-default-theme/Magento_Theme/templates/html/footer.phtml';
+    if (file_exists($defaultTemplate)) {
+        include $defaultTemplate;
+    }
+    return;
+}
+$layout = $footerHelper->getLayout();
+$gridClasses = $footerHelper->getGridClasses();
+?>
+
+<!-- Newsletter -->
+<?php if ($footerHelper->isNewsletterEnabled()): ?>
+    <?= $block->getLayout()->createBlock(Template::class)->setTemplate('Magento_Theme::html/newsletter.phtml')->toHtml() ?>
+<?php endif; ?>
+
+<!-- Footer -->
+<footer class="panth-footer">
+    <div class="max-w-7xl mx-auto px-6 py-16">
+
+        <!-- Footer Columns -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+
+            <?php for ($i = 1; $i <= $layout; $i++): ?>
+                <?php $columnData = $footerHelper->getColumnData($i); ?>
+                <?php if ($columnData['enabled']): ?>
+
+                    <?php if ($i == 1): ?>
+                        <!-- Brand Column -->
+                        <div>
+                            <?php if ($columnData['show_logo']): ?>
+                                <div class="mb-6"><?= $block->getChildHtml('logo') ?></div>
+                            <?php endif; ?>
+
+                            <?php if ($columnData['content']): ?>
+                                <p class="panth-footer-text opacity-90 mb-6 leading-relaxed">
+                                    <?= $escaper->escapeHtml($columnData['content']) ?>
+                                </p>
+                            <?php endif; ?>
+
+                            <?php if ($columnData['show_social']): ?>
+                                <?php $socialLinks = $footerHelper->getSocialLinks(); ?>
+                                <?php if (!empty($socialLinks)): ?>
+                                    <div>
+                                        <p class="panth-footer-follow-label text-sm font-semibold mb-4">
+                                            <?= $escaper->escapeHtml(__('Follow Us')) ?>
+                                        </p>
+                                        <div class="flex gap-3">
+                                            <?php foreach ($socialLinks as $platform => $url): ?>
+                                                <a href="<?= $escaper->escapeUrl($url) ?>"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   class="panth-social-icon w-10 h-10 rounded-lg flex items-center justify-center"
+                                                   aria-label="<?= $escaper->escapeHtmlAttr(ucfirst($platform)) ?>">
+                                                    <i class="fab fa-<?= $escaper->escapeHtmlAttr($platform) ?> text-lg"></i>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+
+                    <?php elseif ($i == 4 && $columnData['show_contact_info']): ?>
+                        <!-- Contact Column -->
+                        <div>
+                            <h3 class="panth-footer-h3 text-lg font-bold mb-6"><?= $escaper->escapeHtml($columnData['title']) ?></h3>
+                            <div class="space-y-4">
+                                <?php if ($columnData['phone']): ?>
+                                    <a href="tel:<?= $escaper->escapeHtmlAttr(preg_replace('/[^0-9+]/', '', $columnData['phone'])) ?>"
+                                       class="panth-footer-text opacity-85 flex items-center gap-3 transition-colors hover:opacity-100">
+                                        <i class="fas fa-phone w-5"></i>
+                                        <span><?= $escaper->escapeHtml($columnData['phone']) ?></span>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if ($columnData['email']): ?>
+                                    <a href="mailto:<?= $escaper->escapeHtmlAttr($columnData['email']) ?>"
+                                       class="panth-footer-text opacity-85 flex items-center gap-3 transition-colors hover:opacity-100">
+                                        <i class="fas fa-envelope w-5"></i>
+                                        <span><?= $escaper->escapeHtml($columnData['email']) ?></span>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if ($columnData['address']): ?>
+                                    <div class="panth-footer-text opacity-85 flex items-start gap-3">
+                                        <i class="fas fa-map-marker-alt w-5 mt-1"></i>
+                                        <span><?= $escaper->escapeHtml($columnData['address']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- Link Columns -->
+                        <div>
+                            <h3 class="panth-footer-h3 text-lg font-bold mb-6"><?= $escaper->escapeHtml($columnData['title']) ?></h3>
+                            <?php if (!empty($columnData['links'])): ?>
+                                <ul class="space-y-3">
+                                    <?php foreach ($columnData['links'] as $link): ?>
+                                        <li>
+                                            <a href="<?= $escaper->escapeUrl($link['url']) ?>"
+                                               class="panth-footer-text opacity-85 transition-colors hover:opacity-100"
+                                               <?php if (!empty($link['target'])): ?>target="<?= $escaper->escapeHtmlAttr($link['target']) ?>"<?php endif; ?>
+                                               <?php if (!empty($link['target']) && $link['target'] === '_blank'): ?>rel="noopener noreferrer"<?php endif; ?>>
+                                                <?= $escaper->escapeHtml($link['title']) ?>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+                <?php endif; ?>
+            <?php endfor; ?>
+
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="panth-footer-bottom border-t pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+                <div class="panth-footer-copyright">
+                    <?= $escaper->escapeHtml(
+                        $footerHelper->getCopyrightText(),
+                        ['a', 'b', 'strong', 'em', 'i', 'u', 'small', 'span', 'br']
+                    ) ?>
+                </div>
+
+                <?php if ($footerHelper->showPaymentIcons()): ?>
+                    <div class="flex items-center gap-4">
+                        <i class="fab fa-cc-visa text-3xl panth-footer-payment-icon"></i>
+                        <i class="fab fa-cc-mastercard text-3xl panth-footer-payment-icon"></i>
+                        <i class="fab fa-cc-paypal text-3xl panth-footer-payment-icon"></i>
+                        <i class="fab fa-cc-amex text-3xl panth-footer-payment-icon"></i>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($footerHelper->showFooterLinks()): ?>
+                    <?php $bottomLinks = $footerHelper->getFooterLinks(); ?>
+                    <?php if (!empty($bottomLinks)): ?>
+                        <nav class="flex items-center gap-4 text-sm" aria-label="<?= $escaper->escapeHtmlAttr(__('Footer links')) ?>">
+                            <?php foreach ($bottomLinks as $bLink): ?>
+                                <a href="<?= $escaper->escapeUrl($bLink['url'] ?? '#') ?>"
+                                   class="panth-footer-bottom-link"
+                                   <?php if (!empty($bLink['target'])): ?>target="<?= $escaper->escapeHtmlAttr($bLink['target']) ?>"<?php endif; ?>
+                                   <?php if (!empty($bLink['target']) && $bLink['target'] === '_blank'): ?>rel="noopener noreferrer"<?php endif; ?>>
+                                    <?= $escaper->escapeHtml($bLink['title'] ?? '') ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </nav>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+    </div>
+</footer>

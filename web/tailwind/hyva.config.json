@@ -1,0 +1,92 @@
+{
+  "tailwind": {
+    "include": [
+      {
+        "src": "vendor/hyva-themes/magento2-default-theme"
+      },
+      {
+        "src": "vendor/mage2kishan/module-advancedcart"
+      },
+      {
+        "src": "vendor/mage2kishan/module-banner-slider"
+      },
+      {
+        "src": "vendor/mage2kishan/module-custom-options"
+      },
+      {
+        "src": "vendor/mage2kishan/module-dynamic-forms"
+      },
+      {
+        "src": "vendor/mage2kishan/module-faq"
+      },
+      {
+        "src": "vendor/mage2kishan/module-footer"
+      },
+      {
+        "src": "vendor/mage2kishan/module-low-stock-notification"
+      },
+      {
+        "src": "vendor/mage2kishan/module-mage-pos"
+      },
+      {
+        "src": "vendor/mage2kishan/module-mega-menu"
+      },
+      {
+        "src": "vendor/mage2kishan/module-order-attachments"
+      },
+      {
+        "src": "vendor/mage2kishan/module-price-drop-alert"
+      },
+      {
+        "src": "vendor/mage2kishan/module-product-attachments"
+      },
+      {
+        "src": "vendor/mage2kishan/module-product-slider"
+      },
+      {
+        "src": "vendor/mage2kishan/module-productgallery"
+      },
+      {
+        "src": "vendor/mage2kishan/module-producttabs"
+      },
+      {
+        "src": "vendor/mage2kishan/module-quickview"
+      },
+      {
+        "src": "vendor/mage2kishan/module-sale-filter-hyva"
+      },
+      {
+        "src": "vendor/mage2kishan/module-search-autocomplete"
+      },
+      {
+        "src": "vendor/mage2kishan/module-testimonials"
+      }
+    ],
+    "exclude": []
+  },
+  "tokens": {
+    "values": {
+      "color": {
+        "primary": {
+          "lighter": "oklch(52% 0.2 265)",
+          "DEFAULT": "oklch(46% 0.2 265)",
+          "darker": "oklch(28% 0.2 265)"
+        },
+        "secondary": {
+          "lighter": "oklch(72% 0.2 150)",
+          "DEFAULT": "oklch(53% 0.15 150)",
+          "darker": "oklch(39% 0.1 153)"
+        },
+        "on": {
+          "primary": "#fff",
+          "secondary": "#fff"
+        }
+      },
+      "form": {
+        "radius": "var(--radius-lg)",
+        "stroke": "var(--color-slate-400)",
+        "active-color": "var(--color-primary)"
+      }
+    }
+  }
+}

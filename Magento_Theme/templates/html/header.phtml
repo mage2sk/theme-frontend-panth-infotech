@@ -1,0 +1,366 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Custom Header with Panth Header Module Integration
+ * Based on Hyvä Default Theme
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Hyva\Theme\ViewModel\LucideIcons;
+use Hyva\Theme\ViewModel\StoreConfig;
+use Magento\Checkout\Block\Cart\Sidebar as SidebarCart;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var ViewModelRegistry $viewModels */
+/** @var HyvaCsp $hyvaCsp */
+
+$headerHelper = $this->helper(Panth\ThemeCustomizer\Helper\HeaderConfig::class);
+
+if (!$headerHelper->isEnabled()) {
+    // Fall back to Hyvä default header template
+    $defaultTemplate = BP . '/vendor/hyva-themes/magento2-default-theme/Magento_Theme/templates/html/header.phtml';
+    if (file_exists($defaultTemplate)) {
+        include $defaultTemplate;
+    }
+    return;
+}
+
+/** @var LucideIcons $lucideIcons */
+$lucideIcons = $viewModels->require(LucideIcons::class);
+
+/** @var StoreConfig $storeConfig */
+$storeConfig = $viewModels->require(StoreConfig::class);
+$showMiniCart = $storeConfig->getStoreConfig(SidebarCart::XML_PATH_CHECKOUT_SIDEBAR_DISPLAY);
+
+$showCompare = $block->getShowCompare() !== null ? (bool) $block->getShowCompare() : true;
+$showWishlist = $block->getShowWishlist() !== null ? (bool) $block->getShowWishlist() : false;
+
+// General Settings (only what's needed for PHP logic)
+$containerClass = $headerHelper->getContainerClass();
+$isStickyEnabled = $headerHelper->isStickyEnabled();
+$showOnScrollUp = $headerHelper->showOnScrollUp();
+$hasShadow = $headerHelper->hasStickyhadow();
+$stickyBackground = $headerHelper->getStickyBackground(); // Used for conditional sticky bg
+
+// Top Bar Settings
+$isTopBarEnabled = $headerHelper->isTopBarEnabled();
+$topBarLeftText = $headerHelper->getTopBarLeftText();
+$topBarRightText = $headerHelper->getTopBarRightText();
+$topBarAllowedTags = ['a', 'b', 'br', 'em', 'i', 'small', 'span', 'strong', 'u'];
+
+// Icon Settings (visibility toggles)
+$showSearch = $headerHelper->isSearchIconEnabled();
+$showAccount = $headerHelper->isAccountIconEnabled();
+$showMinicart = $headerHelper->isMinicartIconEnabled();
+$counterStyle = $headerHelper->getCounterStyle();
+$iconSize = $headerHelper->getIconSize();
+$headerHeight = $headerHelper->getHeight();
+?>
+
+<!-- All CSS variables are generated in backend-config.css via CssExporter -->
+<!-- Logo dimensions, colors, and other styles are defined in components/header.css -->
+
+<script>
+    function initHeader() {
+        return {
+            searchOpen: false,
+            cart: {},
+            isCartOpen: false,
+            <?php if ($isStickyEnabled): ?>
+            isSticky: false,
+            lastScroll: 0,
+            <?php endif; ?>
+            <?php if ($isTopBarEnabled): ?>
+            promoVisible: true,
+            <?php endif; ?>
+            getData(data) {
+                this.cart = data.cart ?? {};
+            },
+            summaryCount() {
+                return this.cart.summary_count || 0;
+            },
+            cartAriaLabel() {
+                return '<?= $escaper->escapeJs($showMiniCart ? __('Toggle minicart') : __('View cart')) ?>, ' +
+                    (this.isCartEmpty() ? '<?= $escaper->escapeJs(__('Cart is empty')) ?>' : (
+                        Math.abs(this.summaryCount()) > 1 ?
+                            hyva.str('<?= $escaper->escapeJs(__('%1 items')) ?>', this.summaryCount()) :
+                            hyva.str('<?= $escaper->escapeJs(__('%1 item')) ?>', this.summaryCount())
+                    ))
+            },
+            isCartEmpty() {
+                return !this.cart.summary_count;
+            },
+            toggleCart() {
+                this.isCartOpen = this.$event.detail?.isOpen ?? true;
+                this.$dispatch('toggle-cart', { isOpen: this.isCartOpen })
+            },
+            toggleSearch() {
+                this.searchOpen = !this.searchOpen;
+                this.$dispatch('search-open');
+            },
+            searchClose() {
+                this.searchOpen = false;
+                this.$refs.searchButton.focus();
+            },
+            searchEscape() {
+                this.searchClose();
+            },
+            <?php if ($isTopBarEnabled): ?>
+            closePromo() {
+                this.promoVisible = false;
+                // Store timestamp instead of simple flag
+                const now = new Date().getTime();
+                localStorage.setItem('promoHiddenUntil', now);
+            },
+            <?php endif; ?>
+            <?php if ($isStickyEnabled): ?>
+            handleScroll() {
+                const scroll = window.pageYOffset;
+                const headerEl = document.getElementById('header');
+                if (!headerEl) return;
+
+                if (scroll > 150) {
+                    this.isSticky = true;
+                    document.body.classList.add('header-sticky');
+                    headerEl.classList.remove('relative');
+                    headerEl.classList.add('fixed', 'top-0', 'left-0', 'right-0');
+                    <?php if ($hasShadow): ?>
+                    headerEl.classList.add('shadow-md');
+                    <?php endif; ?>
+                    <?php if ($stickyBackground): ?>
+                    headerEl.style.backgroundColor = 'var(--header-sticky-bg)';
+                    <?php endif; ?>
+                    <?php if ($showOnScrollUp): ?>
+                    if (scroll > this.lastScroll) {
+                        headerEl.style.transform = 'translateY(-100%)';
+                    } else {
+                        headerEl.style.transform = 'translateY(0)';
+                    }
+                    <?php endif; ?>
+                } else {
+                    this.isSticky = false;
+                    document.body.classList.remove('header-sticky');
+                    headerEl.classList.remove('fixed', 'top-0', 'left-0', 'right-0', 'shadow-md');
+                    headerEl.classList.add('relative');
+                    headerEl.style.backgroundColor = '';
+                    headerEl.style.transform = '';
+                }
+                this.lastScroll = scroll;
+            },
+            init() {
+                <?php if ($isTopBarEnabled): ?>
+                // Check if 24 hours have passed since hiding
+                const hiddenUntil = localStorage.getItem('promoHiddenUntil');
+                if (hiddenUntil) {
+                    const now = new Date().getTime();
+                    const hiddenTime = parseInt(hiddenUntil);
+                    const hoursPassed = (now - hiddenTime) / (1000 * 60 * 60);
+
+                    // Show again if 24 hours have passed
+                    if (hoursPassed >= 24) {
+                        localStorage.removeItem('promoHiddenUntil');
+                        this.promoVisible = true;
+                    } else {
+                        this.promoVisible = false;
+                    }
+                } else {
+                    // First time or old storage format - show the bar
+                    localStorage.removeItem('promoHidden'); // Clean up old format
+                    this.promoVisible = true;
+                }
+                <?php endif; ?>
+                this.handleScroll();
+                window.addEventListener('scroll', () => this.handleScroll());
+            }
+            <?php else: ?>
+            init() {
+                <?php if ($isTopBarEnabled): ?>
+                // Check if 24 hours have passed since hiding
+                const hiddenUntil = localStorage.getItem('promoHiddenUntil');
+                if (hiddenUntil) {
+                    const now = new Date().getTime();
+                    const hiddenTime = parseInt(hiddenUntil);
+                    const hoursPassed = (now - hiddenTime) / (1000 * 60 * 60);
+
+                    // Show again if 24 hours have passed
+                    if (hoursPassed >= 24) {
+                        localStorage.removeItem('promoHiddenUntil');
+                        this.promoVisible = true;
+                    } else {
+                        this.promoVisible = false;
+                    }
+                } else {
+                    // First time or old storage format - show the bar
+                    localStorage.removeItem('promoHidden'); // Clean up old format
+                    this.promoVisible = true;
+                }
+                <?php endif; ?>
+            }
+            <?php endif; ?>
+        }
+    }
+
+    window.addEventListener('alpine:init', () => {
+        Alpine.data('initHeader', initHeader);
+    }, { once: true })
+</script>
+<?php $hyvaCsp->registerInlineScript() ?>
+
+<div x-data="initHeader()" @private-content-loaded.window="getData(event.detail.data)">
+
+<?php if ($isTopBarEnabled): ?>
+<!-- Top Bar -->
+<div
+    x-show="promoVisible"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 -translate-y-full"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="header-topbar text-xs h-10"
+>
+    <div class="<?= $escaper->escapeHtmlAttr($containerClass) ?> h-full">
+        <div class="flex items-center justify-between h-full px-6 lg:px-0">
+            <div class="flex-1 flex items-center gap-6">
+                <?php if ($topBarLeftText): ?>
+                    <span><?= $escaper->escapeHtml($topBarLeftText, $topBarAllowedTags) ?></span>
+                <?php endif; ?>
+            </div>
+            <?php if ($topBarRightText): ?>
+                <span class="hidden md:inline flex-shrink-0">
+                    <?= $escaper->escapeHtml($topBarRightText, $topBarAllowedTags) ?>
+                </span>
+            <?php endif; ?>
+            <button
+                @click="closePromo"
+                class="w-7 h-7 flex items-center justify-center hover:bg-white/10 transition rounded"
+                aria-label="<?= $escaper->escapeHtmlAttr(__('Close')) ?>"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<div id="header"
+     class="header-main relative z-50 w-full border-b transition-all duration-300"
+     style="--header-height: <?= (int) $headerHeight ?>px;"
+>
+    <div class="<?= $escaper->escapeHtmlAttr($containerClass) ?> flex items-center w-full h-full px-6 mx-auto">
+        <!--Navigation: hamburger on mobile (left), desktop nav (center)-->
+        <div class="order-1 lg:order-2 lg:flex-1 flex items-center lg:justify-center">
+            <?= $block->getChildHtml('topmenu') ?>
+        </div>
+
+        <!--Logo: centered on mobile, left-aligned on desktop-->
+        <div class="order-2 lg:order-1 flex-1 lg:flex-none flex justify-center lg:justify-start flex-shrink-0">
+            <div class="logo-wrapper">
+                <?= $block->getChildHtml('logo'); ?>
+            </div>
+        </div>
+
+        <!--Icons: always right-->
+        <div class="order-3 flex items-center gap-0 md:gap-1 flex-shrink-0 md:-mr-1">
+            <?php if ($showCompare): ?>
+                <?= $block->getChildHtml('compare'); ?>
+            <?php endif; ?>
+
+            <?php if ($showSearch): ?>
+            <button
+                id="menu-search-icon"
+                class="header-icon-search btn bg-transparent border-transparent p-1"
+                @click.prevent="toggleSearch"
+                aria-label="<?= $escaper->escapeHtmlAttr(__('Toggle search form')) ?>"
+                aria-haspopup="true"
+                :aria-expanded="searchOpen"
+                x-ref="searchButton"
+            >
+                <?= $lucideIcons->searchHtml('', $iconSize, $iconSize, ["aria-hidden" => "true"]) ?>
+            </button>
+            <?php endif; ?>
+
+            <?= $block->getChildHtml('additional') ?>
+
+            <?php if ($showAccount): ?>
+                <div class="header-icon-account">
+                    <?= $block->getChildHtml('customer') ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($showWishlist): ?>
+                <?= $block->getChildHtml('wishlist') ?>
+            <?php endif ?>
+
+            <?php if ($showMinicart): ?>
+                <?php if ($showMiniCart): ?>
+                    <button
+                <?php else: ?>
+                    <a
+                <?php endif ?>
+                id="menu-cart-icon"
+                type="button"
+                class="header-icon-minicart relative btn bg-transparent border-transparent p-1"
+                x-ref="cartButton"
+                :aria-label="cartAriaLabel"
+                <?php if ($showMiniCart): ?>
+                    @click="toggleCart"
+                    :aria-expanded="isCartOpen"
+                    aria-haspopup="dialog"
+                <?php else: ?>
+                    href="<?= $escaper->escapeUrl($block->getUrl('checkout/cart/index')) ?>"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('View cart')) ?>"
+                <?php endif ?>
+            >
+                <?= $lucideIcons->shoppingCartHtml($iconSize === 24 ? "md:h-6 md:w-6" : "", $iconSize, $iconSize, ["aria-hidden" => "true"]) ?>
+                <span
+                    x-text="summaryCount"
+                    x-show="summaryCount"
+                    x-cloak
+                    class="header-counter absolute font-semibold leading-none text-center uppercase tabular-nums transition-all"
+                    :class="{
+                        '<?= $counterStyle === 'circle' ? 'top-[-6px] right-[-6px] min-w-[22px] h-[22px] px-1.5 rounded-full text-[11px] border-[2.5px] border-white' : '' ?>':<?= $counterStyle === 'circle' ? 'true' : 'false' ?>,
+                        '<?= $counterStyle === 'square' ? 'top-[-5px] right-[-5px] min-w-[20px] h-[20px] px-1.5 rounded-md text-[10px] border-2 border-white' : '' ?>':<?= $counterStyle === 'square' ? 'true' : 'false' ?>,
+                        '<?= $counterStyle === 'pill' ? 'top-[-4px] right-[-8px] min-w-[24px] h-[18px] px-2 rounded-xl text-[10px] border-2 border-white' : '' ?>':<?= $counterStyle === 'pill' ? 'true' : 'false' ?>,
+                        '<?= $counterStyle === 'dot' ? 'top-[2px] right-[2px] w-[10px] h-[10px] min-w-[10px] rounded-full text-[0px] border-2 border-white' : '' ?>':<?= $counterStyle === 'dot' ? 'true' : 'false' ?>,
+                        '<?= $counterStyle === 'badge' ? 'top-[-6px] right-[-10px] min-w-[26px] h-[20px] px-2 rounded-[10px_10px_10px_2px] text-[11px] border-2 border-white' : '' ?>':<?= $counterStyle === 'badge' ? 'true' : 'false' ?>
+                    }"
+                    aria-hidden="true"
+                ></span>
+            <?php if ($showMiniCart): ?>
+                </button>
+            <?php else: ?>
+                </a>
+            <?php endif ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div
+        id="search-content"
+        class="header-main absolute z-10 w-full border-t shadow-sm"
+        x-cloak
+        x-show="searchOpen"
+        @click.outside="searchClose"
+        @keydown.escape="searchEscape"
+    >
+        <?= $block->getChildHtml('header-search'); ?>
+    </div>
+
+    <!--Cart Drawer-->
+    <?= $block->getChildHtml('cart-drawer'); ?>
+
+    <!--Authentication Pop-Up-->
+    <?= $block->getChildHtml('authentication-popup'); ?>
+</div>
+
+</div>

@@ -1,0 +1,510 @@
+<?php
+/**
+ * Panth MegaMenu - Alpine.js Components
+ *
+ * Three components:
+ *   1. megaMenuDesktop(config) — Desktop nav with hover-intent, sticky, keyboard nav
+ *   2. megaMenuMobile(config)  — Mobile drawer with accordion, focus trap, scroll lock
+ *   3. megaMenuMegaPanel()     — Per-column accordion for deep (level 3+) items
+ *
+ * Block class: Panth\MegaMenu\Block\Menu
+ */
+
+/** @var \Panth\MegaMenu\Block\Menu $block */
+$helper = $block->getMenuHelper();
+$menu   = $block->getCurrentMenu();
+
+$desktopConfig = [
+    'hoverDelay'          => (int) $helper->getHoverIntentDelay(),
+    'animationType'       => $helper->getAnimationType(),
+    'animationDuration'   => (int) $helper->getAnimationDuration(),
+    'maxDepth'            => (int) $helper->getMaxDepth(),
+    'stickyEnabled'       => (bool) ($menu ? $menu->getIsSticky() : $helper->isStickyMenuEnabled()),
+    'stickyOffset'        => (int) $helper->getStickyOffset(),
+    'stickyHideOnScroll'  => (bool) $helper->hideOnScrollDown(),
+    'stickyShowOnScrollUp'=> (bool) $helper->showOnScrollUp(),
+    'stickyCompactMode'   => (bool) $helper->isStickyCompactMode(),
+    'stickyAnimationSpeed'=> (int) $helper->getStickyAnimationSpeed(),
+    'stickyShadow'        => (bool) $helper->showStickyShadow(),
+    'debugMode'           => (bool) $helper->isDebugEnabled(),
+];
+
+$mobileConfig = [
+    'position'         => $helper->getMobilePosition(),
+    'overlayEnabled'   => (bool) $helper->isMobileOverlayEnabled(),
+    'accordionEnabled' => (bool) $helper->isMobileAccordionEnabled(),
+    'animationSpeed'   => (int) $helper->getMobileAnimationSpeed(),
+];
+?>
+<script>
+    'use strict';
+
+    /**
+     * Configuration objects injected from PHP / Magento admin.
+     * Functions defined globally so Alpine can find them when scanning DOM.
+     * Also registered via alpine:init for deferred initialization.
+     */
+    var megaMenuDesktopConfig = <?= /* @noEscape */ json_encode($desktopConfig, JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+    var megaMenuMobileConfig  = <?= /* @noEscape */ json_encode($mobileConfig, JSON_HEX_TAG | JSON_HEX_APOS) ?>;
+
+    /* ------------------------------------------------------------------ */
+    /*  1. megaMenuDesktop(config)                                        */
+    /* ------------------------------------------------------------------ */
+    function megaMenuDesktop(config) {
+        config = Object.assign({}, megaMenuDesktopConfig, config || {});
+
+        return {
+            /* ---- state ---- */
+            activeItem: null,
+            expandedItems: [],
+            hoverTimer: null,
+            closeTimer: null,
+            isSticky: false,
+            lastScrollY: 0,
+            stickyHidden: false,
+            scrollTicking: false,
+
+            /* ---- lifecycle ---- */
+            init() {
+                if (config.stickyEnabled) {
+                    this.initSticky();
+                }
+                this.initKeyboard();
+                this.initOutsideClick();
+                this._debug('megaMenuDesktop initialised', config);
+            },
+
+            destroy() {
+                /* Clean up listeners bound via $el — Alpine handles those
+                   automatically when x-data is removed from the DOM. */
+            },
+
+            /* ============================================================
+             *  Hover-intent open / close
+             * ============================================================ */
+            open(id) {
+                clearTimeout(this.closeTimer);
+                this.closeTimer = null;
+
+                if (this.activeItem === id) return;
+
+                this.hoverTimer = setTimeout(function () {
+                    this.activeItem = id;
+                    this.expandedItems = [];
+                    this._debug('open', id);
+                    this._setAriaExpanded(id, true);
+                }.bind(this), config.hoverDelay);
+            },
+
+            close() {
+                clearTimeout(this.hoverTimer);
+                this.hoverTimer = null;
+
+                this.closeTimer = setTimeout(function () {
+                    this._setAriaExpanded(this.activeItem, false);
+                    this.activeItem = null;
+                    this.expandedItems = [];
+                    this._debug('close');
+                }.bind(this), config.hoverDelay);
+            },
+
+            cancelClose() {
+                clearTimeout(this.closeTimer);
+                this.closeTimer = null;
+            },
+
+            closeAll() {
+                clearTimeout(this.hoverTimer);
+                clearTimeout(this.closeTimer);
+                this.hoverTimer = null;
+                this.closeTimer = null;
+                this._setAriaExpanded(this.activeItem, false);
+                this.activeItem = null;
+                this.expandedItems = [];
+                this._debug('closeAll');
+            },
+
+            isOpen(id) {
+                return this.activeItem === id;
+            },
+
+            /* ============================================================
+             *  Deep-level accordion within a mega panel
+             * ============================================================ */
+            toggleExpand(id) {
+                var idx = this.expandedItems.indexOf(id);
+                if (idx > -1) {
+                    this.expandedItems.splice(idx, 1);
+                } else {
+                    this.expandedItems.push(id);
+                }
+                this._debug('toggleExpand', id, this.expandedItems.slice());
+            },
+
+            isExpanded(id) {
+                return this.expandedItems.indexOf(id) > -1;
+            },
+
+            /* ============================================================
+             *  Viewport-aware dropdown positioning
+             * ============================================================ */
+            adjustDropdownPosition(dropdownEl) {
+                if (!dropdownEl) return;
+                /* Reset any previous adjustment */
+                dropdownEl.style.left = '';
+                dropdownEl.style.right = '';
+
+                var rect = dropdownEl.getBoundingClientRect();
+                var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+
+                if (rect.right > viewportWidth) {
+                    dropdownEl.style.left = 'auto';
+                    dropdownEl.style.right = '0';
+                    this._debug('adjustDropdownPosition: shifted left');
+                }
+                if (rect.left < 0) {
+                    dropdownEl.style.left = '0';
+                    dropdownEl.style.right = 'auto';
+                    this._debug('adjustDropdownPosition: shifted right');
+                }
+            },
+
+            /* ============================================================
+             *  Sticky menu
+             * ============================================================ */
+            initSticky() {
+                var self = this;
+                self.lastScrollY = window.pageYOffset;
+
+                window.addEventListener('scroll', function () {
+                    if (!self.scrollTicking) {
+                        requestAnimationFrame(function () {
+                            self.handleScroll();
+                            self.scrollTicking = false;
+                        });
+                        self.scrollTicking = true;
+                    }
+                }, { passive: true });
+            },
+
+            handleScroll() {
+                var currentY = window.pageYOffset;
+                var navEl = this.$el;
+
+                /* Determine sticky state */
+                var shouldStick = currentY > config.stickyOffset;
+
+                if (shouldStick !== this.isSticky) {
+                    this.isSticky = shouldStick;
+
+                    if (shouldStick) {
+                        navEl.classList.add('is-sticky');
+                        if (config.stickyCompactMode) {
+                            navEl.classList.add('is-sticky-compact');
+                        }
+                        if (config.stickyShadow) {
+                            navEl.classList.add('is-sticky-shadow');
+                        }
+                        navEl.style.transitionDuration = config.stickyAnimationSpeed + 'ms';
+                    } else {
+                        navEl.classList.remove('is-sticky', 'is-sticky-compact', 'is-sticky-shadow', 'is-sticky-hidden');
+                        this.stickyHidden = false;
+                    }
+                    this._debug('sticky', this.isSticky);
+                }
+
+                /* Hide-on-scroll-down / show-on-scroll-up behaviour */
+                if (this.isSticky && config.stickyHideOnScroll) {
+                    var scrollingDown = currentY > this.lastScrollY;
+
+                    if (scrollingDown && !this.stickyHidden) {
+                        navEl.classList.add('is-sticky-hidden');
+                        this.stickyHidden = true;
+                        this._debug('sticky hidden (scroll down)');
+                    } else if (!scrollingDown && this.stickyHidden && config.stickyShowOnScrollUp) {
+                        navEl.classList.remove('is-sticky-hidden');
+                        this.stickyHidden = false;
+                        this._debug('sticky shown (scroll up)');
+                    }
+                }
+
+                this.lastScrollY = currentY;
+            },
+
+            /* ============================================================
+             *  Keyboard navigation
+             * ============================================================ */
+            initKeyboard() {
+                var self = this;
+
+                this.$el.addEventListener('keydown', function (e) {
+                    var items = self.$el.querySelectorAll('[data-menu-item]');
+                    var current = document.activeElement;
+                    var index = Array.prototype.indexOf.call(items, current);
+
+                    switch (e.key) {
+                        case 'ArrowRight':
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            if (index < items.length - 1) {
+                                items[index + 1].focus();
+                            }
+                            break;
+
+                        case 'ArrowLeft':
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            if (index > 0) {
+                                items[index - 1].focus();
+                            }
+                            break;
+
+                        case 'Escape':
+                            e.preventDefault();
+                            self.closeAll();
+                            /* Return focus to the top-level trigger that opened the panel */
+                            var trigger = self.$el.querySelector('[data-menu-trigger][aria-expanded="true"]');
+                            if (trigger) trigger.focus();
+                            break;
+
+                        case 'Enter':
+                        case ' ':
+                            /* Default browser behaviour follows the link — no override needed
+                               unless the focused element is a non-link trigger. */
+                            if (current && current.hasAttribute('data-menu-trigger') &&
+                                !current.getAttribute('href')) {
+                                e.preventDefault();
+                                var id = current.getAttribute('data-menu-trigger');
+                                if (self.isOpen(id)) {
+                                    self.closeAll();
+                                } else {
+                                    clearTimeout(self.hoverTimer);
+                                    self.activeItem = id;
+                                    self.expandedItems = [];
+                                    self._setAriaExpanded(id, true);
+                                }
+                            }
+                            break;
+
+                        case 'Tab':
+                            /* Let Tab behave naturally so focus leaves the menu. Close
+                               dropdowns after a short delay to avoid visual flash. */
+                            setTimeout(function () {
+                                if (!self.$el.contains(document.activeElement)) {
+                                    self.closeAll();
+                                }
+                            }, 50);
+                            break;
+                    }
+                });
+            },
+
+            /* ============================================================
+             *  Close on outside click
+             * ============================================================ */
+            initOutsideClick() {
+                var self = this;
+                document.addEventListener('click', function (e) {
+                    if (self.activeItem !== null && !self.$el.contains(e.target)) {
+                        self.closeAll();
+                    }
+                });
+            },
+
+            /* ============================================================
+             *  Helpers
+             * ============================================================ */
+            _setAriaExpanded(id, expanded) {
+                if (!id) return;
+                var trigger = this.$el.querySelector('[data-menu-trigger="' + id + '"]');
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                }
+            },
+
+            _debug() {
+                if (config.debugMode && window.console) {
+                    var args = ['[MegaMenu Desktop]'].concat(Array.prototype.slice.call(arguments));
+                    console.log.apply(console, args);
+                }
+            }
+        };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  2. megaMenuMobile(config)                                         */
+    /* ------------------------------------------------------------------ */
+    function megaMenuMobile(config) {
+        config = Object.assign({}, megaMenuMobileConfig, config || {});
+
+        return {
+            /* ---- state ---- */
+            isOpen: false,
+            expanded: [],
+            previousOverflow: '',
+            focusableSelector: 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+
+            /* ---- lifecycle ---- */
+            init() {
+                this.initEscapeKey();
+            },
+
+            /* ============================================================
+             *  Open / close drawer
+             * ============================================================ */
+            open() {
+                this.isOpen = true;
+                this.previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+
+                /* Set ARIA */
+                this.$el.setAttribute('aria-hidden', 'false');
+
+                /* Focus first focusable element inside drawer after transition */
+                var self = this;
+                setTimeout(function () {
+                    self.trapFocus();
+                }, config.animationSpeed);
+            },
+
+            close() {
+                this.isOpen = false;
+                document.body.style.overflow = this.previousOverflow;
+                this.expanded = [];
+
+                /* Set ARIA */
+                this.$el.setAttribute('aria-hidden', 'true');
+
+                /* Return focus to the trigger that opened the drawer */
+                var trigger = document.querySelector('[data-mobile-trigger]');
+                if (trigger) trigger.focus();
+            },
+
+            /* ============================================================
+             *  Overlay click
+             * ============================================================ */
+            overlayClick() {
+                if (config.overlayEnabled) {
+                    this.close();
+                }
+            },
+
+            /* ============================================================
+             *  Recursive accordion
+             * ============================================================ */
+            toggle(id) {
+                var idx = this.expanded.indexOf(id);
+                if (idx > -1) {
+                    this.expanded.splice(idx, 1);
+                } else {
+                    this.expanded.push(id);
+                }
+            },
+
+            isExpanded(id) {
+                return this.expanded.indexOf(id) > -1;
+            },
+
+            collapseAll() {
+                this.expanded = [];
+            },
+
+            /* ============================================================
+             *  Escape key
+             * ============================================================ */
+            initEscapeKey() {
+                var self = this;
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && self.isOpen) {
+                        self.close();
+                    }
+                });
+            },
+
+            /* ============================================================
+             *  Focus trap
+             * ============================================================ */
+            trapFocus() {
+                var self = this;
+                var drawerEl = this.$el.querySelector('[data-mobile-drawer]') || this.$el;
+                var focusables = drawerEl.querySelectorAll(self.focusableSelector);
+
+                if (focusables.length === 0) return;
+
+                var first = focusables[0];
+                var last  = focusables[focusables.length - 1];
+
+                first.focus();
+
+                /* Remove any previous trap listener to avoid stacking */
+                if (this._trapHandler) {
+                    drawerEl.removeEventListener('keydown', this._trapHandler);
+                }
+
+                this._trapHandler = function (e) {
+                    if (e.key !== 'Tab') return;
+
+                    /* Re-query in case DOM changed (accordion expand) */
+                    var currentFocusables = drawerEl.querySelectorAll(self.focusableSelector);
+                    if (currentFocusables.length === 0) return;
+
+                    var firstEl = currentFocusables[0];
+                    var lastEl  = currentFocusables[currentFocusables.length - 1];
+
+                    if (e.shiftKey) {
+                        if (document.activeElement === firstEl) {
+                            e.preventDefault();
+                            lastEl.focus();
+                        }
+                    } else {
+                        if (document.activeElement === lastEl) {
+                            e.preventDefault();
+                            firstEl.focus();
+                        }
+                    }
+                };
+
+                drawerEl.addEventListener('keydown', this._trapHandler);
+            },
+
+            /* ============================================================
+             *  Helpers — position class
+             * ============================================================ */
+            get positionClass() {
+                return config.position === 'right'
+                    ? 'megamenu-drawer-right'
+                    : 'megamenu-drawer-left';
+            },
+
+            get animationDuration() {
+                return config.animationSpeed + 'ms';
+            }
+        };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  3. megaMenuMegaPanel()                                            */
+    /* ------------------------------------------------------------------ */
+    function megaMenuMegaPanel() {
+        return {
+            expanded: [],
+
+            toggle(id) {
+                var idx = this.expanded.indexOf(id);
+                if (idx > -1) {
+                    this.expanded.splice(idx, 1);
+                } else {
+                    this.expanded.push(id);
+                }
+            },
+
+            isExpanded(id) {
+                return this.expanded.indexOf(id) > -1;
+            },
+
+            collapseAll() {
+                this.expanded = [];
+            }
+        };
+    }
+</script>

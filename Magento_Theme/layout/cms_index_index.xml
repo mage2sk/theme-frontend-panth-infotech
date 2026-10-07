@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) Panth Infotech. All rights reserved.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="columns.top">
+            <block class="Magento\Theme\Block\Html\Title" name="panth.home.title" template="Magento_Theme::html/title.phtml" before="-">
+                <arguments>
+                    <argument name="css_classes" xsi:type="string">sr-only</argument>
+                    <argument name="wrapper_css_classes" xsi:type="string">sr-only</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

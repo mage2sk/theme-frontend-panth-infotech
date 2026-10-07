@@ -1,0 +1,38 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Product Add to Cart Button
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\LucideIcons;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var LucideIcons $lucideIcons */
+$lucideIcons = $viewModels->require(LucideIcons::class);
+
+$buttonLabel = $block->getData('is_cart_configure')
+    ? __('Update item')
+    : __('Add to Cart');
+?>
+
+<button
+    type="submit"
+    form="product_addtocart_form"
+    aria-label="<?= $escaper->escapeHtmlAttr($buttonLabel) ?>"
+    class="btn btn-primary"
+    id="product-addtocart-button"
+    data-addto="cart"
+>
+    <?= $lucideIcons->shoppingCartHtml('', 20, 20, ['aria-hidden' => 'true']); ?>
+    <span><?= $escaper->escapeHtml($buttonLabel) ?></span>
+</button>
+
+<?= $block->getChildHtml('', true) ?>

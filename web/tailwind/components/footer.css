@@ -1,0 +1,176 @@
+/**
+ * Footer Component Styles
+ * Uses CSS variables from backend-config.css (generated from admin settings)
+ * No hardcoded colors - all colors come from CSS variables
+ */
+
+/* Reset page-footer container to be transparent */
+.page-footer {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.page-footer > .footer.content {
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Main Footer */
+.panth-footer {
+    background-color: var(--footer-bg-color);
+    color: var(--footer-text-color);
+}
+
+.panth-footer a {
+    color: var(--footer-text-color);
+}
+
+.panth-footer a:hover {
+    color: var(--footer-h3-color);
+    opacity: 1;
+}
+
+.panth-footer-text {
+    color: var(--footer-text-color);
+}
+
+.panth-footer-h2 {
+    color: var(--footer-h2-color);
+}
+
+.panth-footer-h3 {
+    color: var(--footer-h3-color);
+}
+
+/* Social icons */
+.panth-social-icon {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--footer-h3-color);
+    transition: background-color 0.3s ease, transform 0.15s ease;
+}
+
+.panth-social-icon:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.panth-social-icon svg,
+.panth-social-icon i {
+    color: var(--footer-h3-color);
+    fill: var(--footer-h3-color);
+}
+
+/* "Follow Us" label */
+.panth-footer-follow-label {
+    color: var(--footer-h3-color);
+}
+
+/* Footer bottom bar */
+.panth-footer-bottom {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Copyright text */
+.panth-footer-copyright {
+    color: var(--footer-text-color);
+    opacity: 0.6;
+}
+
+/* Payment icons */
+.panth-footer-payment-icon {
+    color: var(--footer-text-color);
+    opacity: 0.5;
+}
+
+/* Bottom links */
+.panth-footer-bottom-link {
+    color: var(--footer-text-color);
+    opacity: 0.6;
+    transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.panth-footer-bottom-link:hover {
+    color: var(--footer-h3-color);
+    opacity: 1;
+}
+
+/* Footer Newsletter */
+.panth-newsletter {
+    background-color: var(--footer-newsletter-bg);
+}
+
+.panth-newsletter-title {
+    color: var(--footer-newsletter-title);
+}
+
+.panth-newsletter-text {
+    color: var(--footer-newsletter-text);
+}
+
+.panth-newsletter-button {
+    background-color: var(--footer-newsletter-button-bg);
+    color: var(--footer-newsletter-button-text) !important;
+    transition: background-color 0.3s ease, transform 0.15s ease;
+}
+
+.panth-newsletter-button span {
+    color: inherit !important;
+}
+
+.panth-newsletter-button:hover {
+    background-color: var(--footer-newsletter-button-hover);
+    transform: translateY(-1px);
+}
+
+.panth-newsletter-input {
+    background-color: var(--footer-newsletter-input-bg);
+    color: var(--footer-newsletter-input-text);
+    border-color: var(--footer-newsletter-input-border);
+}
+
+.panth-newsletter-input:focus {
+    border-color: var(--footer-newsletter-input-focus-border);
+    outline: none;
+}
+
+.panth-newsletter-input::placeholder {
+    color: var(--footer-newsletter-input-text);
+    opacity: 0.5;
+}
+
+/* Newsletter benefits text (exclude button spans) */
+.panth-newsletter span:not(.panth-newsletter-button span) {
+    color: var(--footer-newsletter-text);
+}
+
+/* Newsletter benefit checkmark - uses primary color from theme */
+.panth-newsletter-check {
+    color: var(--color-primary);
+}
+
+/* Newsletter message states */
+.panth-newsletter-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--footer-newsletter-text);
+}
+
+.panth-newsletter-error {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--footer-newsletter-text);
+}
+
+/* Back to Top Button */
+.panth-back-to-top {
+    background-color: var(--footer-backtotop-bg);
+    color: var(--footer-backtotop-icon);
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.panth-back-to-top:hover {
+    background-color: var(--footer-backtotop-hover-bg);
+    color: var(--footer-backtotop-hover-icon);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

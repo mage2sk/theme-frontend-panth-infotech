@@ -1,0 +1,61 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * Modified by Panth Infotech - Custom breadcrumb separator from ThemeCustomizer
+ */
+
+declare(strict_types=1);
+
+use Magento\Theme\Block\Html\Breadcrumbs;
+use Magento\Framework\Escaper;
+
+/** @var Escaper $escaper */
+/** @var Breadcrumbs $block */
+/** @var array[] $crumbs */
+
+if (!$crumbs && !is_array($crumbs)) {
+    return '';
+}
+
+// Get custom separator from ThemeCustomizer
+$themeHelper = $this->helper(Panth\ThemeCustomizer\Helper\Data::class);
+$customSeparator = $themeHelper->getBreadcrumbSeparator() ?: '/';
+
+// NOTE: JSON-LD BreadcrumbList is intentionally NOT emitted here.
+// Panth_AdvancedSEO (Model/StructuredData/Provider/BreadcrumbProvider.php)
+// is the single authoritative source of BreadcrumbList structured data.
+// Emitting another copy here causes duplicate JSON-LD in the rendered page.
+?>
+
+<nav class="breadcrumbs bg-surface shadow-sm" aria-label="Breadcrumb">
+    <div class="container">
+        <ol class="items list-reset py-4 rounded flex flex-wrap text-grey text-sm">
+            <?php foreach ($crumbs as $crumbName => $crumbInfo): ?>
+                <li class="item flex <?= $escaper->escapeHtmlAttr($crumbName) ?>">
+                <?php if (!$crumbInfo['first']): ?>
+                    <span aria-hidden="true" class="separator text-fg-secondary px-2"><?= $escaper->escapeHtml($customSeparator) ?></span>
+                <?php endif; ?>
+                <?php if ($crumbInfo['link']): ?>
+                    <a
+                        href="<?= $escaper->escapeUrl($crumbInfo['link']) ?>"
+                        <?php if ($crumbInfo['title']): ?>
+                            aria-label="<?= $escaper->escapeHtmlAttr($crumbInfo['title']) ?>"
+                        <?php endif; ?>
+                    ><?= $escaper->escapeHtml($crumbInfo['label']) ?></a>
+                <?php elseif ($crumbInfo['last']): ?>
+                    <a
+                        href="<?= $escaper->escapeUrl($block->getUrl('', ['_current' => true, '_use_rewrite' => true])) ?>"
+                        class="text-fg-secondary"
+                        aria-current="page"
+                    ><?= $escaper->escapeHtml($crumbInfo['label']) ?></a>
+                <?php else: ?>
+                    <?= $escaper->escapeHtml($crumbInfo['label']) ?>
+                <?php endif; ?>
+                </li>
+            <?php endforeach ?>
+        </ol>
+    </div>
+</nav>

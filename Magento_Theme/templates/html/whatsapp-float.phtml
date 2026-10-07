@@ -1,0 +1,138 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * WhatsApp Floating Button
+ */
+
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+
+/** @var Escaper $escaper */
+
+$headerHelper = $this->helper(Panth\ThemeCustomizer\Helper\HeaderConfig::class);
+
+if (!$headerHelper->isWhatsAppEnabled()) {
+    return;
+}
+
+$phone = $headerHelper->getWhatsAppPhone();
+$message = $headerHelper->getWhatsAppMessage();
+$position = $headerHelper->getWhatsAppPosition();
+$buttonText = $headerHelper->getWhatsAppButtonText();
+
+$isLeft = in_array($position, ['bottom-left', 'top-left']);
+$isBottom = in_array($position, ['bottom-left', 'bottom-right']);
+
+// Create WhatsApp URL
+$whatsappUrl = 'https://wa.me/' . preg_replace('/[^0-9]/', '', $phone);
+if ($message) {
+    $whatsappUrl .= '?text=' . urlencode($message);
+}
+?>
+
+<style>
+    /* Float wrapper: same right/left offset as back-to-top (bottom-6 right-6 = 24px) */
+    .whatsapp-float-wrapper {
+        position: fixed;
+        z-index: 40;
+        <?= $isLeft ? 'left' : 'right' ?>: var(--whatsapp-float-side, 24px);
+        <?= $isBottom ? 'bottom: var(--whatsapp-float-bottom-with-btt, 92px)' : 'top: 80px' ?>;
+    }
+    /* Same size as back-to-top: w-14 h-14 = 56px */
+    .whatsapp-float-hyva {
+        width: var(--whatsapp-float-size, 56px);
+        height: var(--whatsapp-float-size, 56px);
+        background-color: var(--whatsapp-button-bg);
+    }
+    .whatsapp-float-hyva .whatsapp-ping {
+        background-color: var(--whatsapp-button-bg);
+    }
+    .whatsapp-float-hyva svg {
+        width: var(--whatsapp-float-icon-size, 28px);
+        height: var(--whatsapp-float-icon-size, 28px);
+        color: var(--whatsapp-button-text);
+    }
+    /* Tooltip */
+    .whatsapp-float-hyva .whatsapp-hover-label {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+    .whatsapp-float-hyva:hover .whatsapp-hover-label {
+        opacity: 1;
+    }
+    @media (max-width: 1024px) {
+        .whatsapp-float-hyva .whatsapp-hover-label {
+            display: none;
+        }
+    }
+    /* Mobile: same size, same offset — perfectly stacked */
+    @media (max-width: 767px) {
+        .whatsapp-float-wrapper {
+            <?= $isLeft ? 'left' : 'right' ?>: var(--whatsapp-float-side, 24px);
+        }
+        .whatsapp-float-hyva {
+            width: var(--whatsapp-float-size-mobile, 56px);
+            height: var(--whatsapp-float-size-mobile, 56px);
+        }
+        .whatsapp-float-hyva svg {
+            width: var(--whatsapp-float-icon-size-mobile, 28px);
+            height: var(--whatsapp-float-icon-size-mobile, 28px);
+        }
+    }
+</style>
+
+<div
+    x-data="{
+        showButton: false,
+        pulse: true,
+        init() {
+            setTimeout(() => {
+                this.showButton = true;
+                setTimeout(() => {
+                    this.pulse = false;
+                }, 3000);
+            }, 1000);
+        }
+    }"
+    x-show="showButton"
+    x-transition:enter="transition ease-out duration-500"
+    x-transition:enter-start="opacity-0 scale-0"
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-0"
+    class="whatsapp-float-wrapper"
+>
+    <a
+        href="<?= $escaper->escapeUrl($whatsappUrl) ?>"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="whatsapp-float-hyva group relative flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110"
+        aria-label="<?= $escaper->escapeHtmlAttr($buttonText ?: __('Chat on WhatsApp')) ?>"
+        title="<?= $escaper->escapeHtmlAttr($buttonText ?: __('Chat on WhatsApp')) ?>"
+        @mouseenter="pulse = false"
+    >
+        <!-- Pulsing ring animation -->
+        <div
+            x-show="pulse"
+            class="whatsapp-ping absolute inset-0 rounded-full animate-ping opacity-40"
+        ></div>
+
+        <!-- WhatsApp Icon -->
+        <svg class="relative z-10 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 32 32">
+            <path d="M16.002 0C7.165 0 0 7.165 0 16.002c0 2.825.745 5.479 2.044 7.796L.068 31.93l8.353-2.002A15.908 15.908 0 0 0 16.002 32C24.837 32 32 24.835 32 16.002 32 7.165 24.837 0 16.002 0zm9.381 22.837c-.383 1.077-1.905 1.973-3.124 2.23-.835.175-1.926.316-5.597-1.204-4.696-1.944-7.722-6.675-7.956-6.98-.223-.306-1.859-2.474-1.859-4.717 0-2.243 1.175-3.345 1.593-3.801.419-.456.912-.57 1.217-.57.305 0 .609.002.876.014.28.013.656-.107.928.707.383.917 1.303 3.176 1.416 3.407.113.232.189.503.038.809-.151.306-.227.497-.451.764-.224.268-.471.597-.672.801-.224.227-.458.472-.197.925.261.454 1.159 1.911 2.487 3.096 1.71 1.524 3.15 2.001 3.594 2.228.444.227.704.189.963-.113.259-.302 1.111-1.293 1.407-1.738.296-.445.593-.371 1-.223.406.148 2.585 1.218 3.029 1.44.444.223.74.334.847.519.107.185.107 1.074-.276 2.151z"/>
+        </svg>
+
+        <!-- Hover tooltip -->
+        <?php if ($buttonText): ?>
+        <span
+            class="whatsapp-hover-label absolute <?= $isLeft ? 'right-full mr-3' : 'left-full ml-3' ?> px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
+        >
+            <?= $escaper->escapeHtml($buttonText) ?>
+            <span class="absolute top-1/2 <?= $isLeft ? '-right-1' : '-left-1' ?> w-2 h-2 bg-gray-900 transform -translate-y-1/2 rotate-45"></span>
+        </span>
+        <?php endif; ?>
+    </a>
+</div>

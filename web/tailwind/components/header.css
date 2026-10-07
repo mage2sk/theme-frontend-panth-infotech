@@ -1,0 +1,85 @@
+/**
+ * Header Component Styles
+ * Uses CSS variables from backend-config.css (generated from admin settings)
+ */
+
+/* Logo sizing using backend configuration */
+.logo-wrapper img {
+    width: var(--logo-mobile-width);
+    height: var(--logo-mobile-height);
+    object-fit: contain;
+}
+
+@media (min-width: 1024px) {
+    .logo-wrapper img {
+        width: var(--logo-desktop-width);
+        height: var(--logo-desktop-height);
+    }
+}
+
+/* Header container with background, border, and height from backend */
+.header-main {
+    background-color: var(--header-bg);
+    border-color: #E5E5E5;
+    height: var(--header-height);
+}
+
+/* Top bar styles */
+.header-topbar {
+    background-color: var(--topbar-bg);
+    color: var(--topbar-text);
+}
+
+/* Icon colors */
+.header-icon-search {
+    color: var(--header-icon-search);
+    transition: color 0.2s ease;
+}
+
+.header-icon-search:hover {
+    color: var(--header-icon-search-hover);
+}
+
+.header-icon-account {
+    color: var(--header-icon-account);
+    transition: color 0.2s ease;
+}
+
+.header-icon-account:hover {
+    color: var(--header-icon-account-hover);
+}
+
+.header-icon-minicart {
+    color: var(--header-icon-minicart);
+    transition: color 0.2s ease;
+}
+
+.header-icon-minicart:hover {
+    color: var(--header-icon-minicart-hover);
+}
+
+/* Counter badge — centered text for all shapes */
+.header-counter {
+    background-color: var(--header-counter-bg);
+    color: var(--header-counter-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+@media (max-width: 1023.98px), (pointer: coarse) {
+    #header .header-icon-search,
+    #header .header-icon-account button,
+    #header .header-icon-account > a,
+    #header .header-icon-minicart {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .header-topbar button {
+        min-width: 44px;
+        min-height: 44px;
+        margin-block: -2px;
+    }
+}

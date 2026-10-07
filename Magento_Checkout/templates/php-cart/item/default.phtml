@@ -1,0 +1,137 @@
+<?php
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\LucideIcons;
+use Hyva\Theme\ViewModel\ProductStockItem;
+use Magento\Checkout\Block\Cart\Item\Renderer;
+use Magento\Framework\Escaper;
+
+/** @var Renderer $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+$stockItemViewModel = $viewModels->require(ProductStockItem::class);
+
+/** @var LucideIcons $lucideIcons */
+$lucideIcons = $viewModels->require(LucideIcons::class);
+
+$item = $block->getItem();
+$product = $item->getProduct();
+$minSalesQty = $stockItemViewModel->getMinSaleQty($product);
+$maxSalesQty = $stockItemViewModel->getMaxSaleQty($product);
+$qty = $stockItemViewModel->isQtyDecimal($product) ? $block->getQty() : (int) $block->getQty();
+$step = $stockItemViewModel->getQtyIncrements($product) ?: null;
+if ($step) {
+    $minSalesQty = ceil($minSalesQty / $step) * $step;
+    $maxSalesQty = floor($maxSalesQty / $step) * $step;
+    $qty = ceil($qty / $step) * $step;
+}
+$maxSalesQtyLength = ($maxSalesQty ? strlen((string) $maxSalesQty) : 4) + ((int) $stockItemViewModel->isQtyDecimal($product));
+?>
+<article class="panth-cart-item flex gap-3 p-3 lg:p-4 mb-3 rounded-xl border border-gray-200 bg-gray-50 shadow-sm hover:shadow-md transition-shadow"
+    <?php foreach ($block->getData('cart_item_data_attributes') ?? [] as $attribute => $include): ?>
+        <?php if ($include): ?><?= $escaper->escapeHtml(sprintf('data-%s', $attribute)); ?>="<?= $escaper->escapeHtmlAttr($item->getData($attribute)); ?>"<?php endif; ?>
+    <?php endforeach; ?>
+>
+    <!-- Image -->
+    <?php if ($block->hasProductUrl()): ?>
+        <a href="<?= $escaper->escapeUrl($block->getProductUrl()) ?>" tabindex="-1" class="product-item-photo shrink-0 block self-start">
+    <?php else: ?>
+        <div class="product-item-photo shrink-0 self-start">
+    <?php endif;?>
+        <?= $block->getImage($block->getProductForThumbnail(), 'cart_page_product_thumbnail')
+            ->setTemplate('Magento_Catalog::product/image.phtml')
+            ->toHtml() ?>
+    <?php if ($block->hasProductUrl()): ?></a><?php else: ?></div><?php endif; ?>
+
+    <!-- Content column -->
+    <div class="flex-1 min-w-0">
+        <!-- Row 1: Name + Price -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <h3 class="text-[15px] font-semibold leading-snug m-0 min-w-0 flex-1">
+                <?php if ($block->hasProductUrl()): ?>
+                    <a href="<?= $escaper->escapeUrl($block->getProductUrl()) ?>" class="text-gray-900 hover:text-primary transition-colors">
+                        <?= $escaper->escapeHtml($block->getProductName()) ?>
+                    </a>
+                <?php else: ?>
+                    <?= $escaper->escapeHtml($block->getProductName()) ?>
+                <?php endif; ?>
+            </h3>
+            <div class="shrink-0 text-right">
+                <span class="text-[15px] font-bold text-gray-900 whitespace-nowrap"><?= $block->getRowTotalHtml($item) ?></span>
+                <?php if ($qty > 1): ?>
+                    <div class="text-xs text-gray-400 whitespace-nowrap"><?= $escaper->escapeHtml(__('%1 x', $qty)) ?> <?= $block->getUnitPriceHtml($item) ?></div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <?php if ($options = $block->getOptionList()): ?>
+            <div class="flex flex-wrap gap-1 mt-1.5">
+                <?php foreach ($options as $option): ?>
+                    <?php $formatedOptionValue = $block->getFormatedOptionValue($option) ?>
+                    <?php $isAttachmentOption = ($option['label'] ?? '') === 'Attachments'; ?>
+                    <?php if ($isAttachmentOption): ?>
+                        <div class="mt-1"><?= /* @noEscape */ $option['value'] ?></div>
+                    <?php else: ?>
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-gray-200/60 text-gray-500 break-words">
+                            <?= $escaper->escapeHtml($option['label']) ?>: <span class="text-gray-700"><?php if (isset($formatedOptionValue['full_view'])): ?><?= $escaper->escapeHtml($formatedOptionValue['full_view']) ?><?php else: ?><?= $escaper->escapeHtml($formatedOptionValue['value'], ['span', 'a']) ?><?php endif; ?></span>
+                        </span>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+        <?php endif;?>
+
+        <?php if ($messages = $block->getMessages()): ?>
+            <?php foreach ($messages as $message): ?>
+                <div class="text-xs mt-1 text-red-500"><?= $escaper->escapeHtml($message['text']) ?></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+        <?php $addInfoBlock = $block->getProductAdditionalInformationBlock(); ?>
+        <?php if ($addInfoBlock): ?><?= $addInfoBlock->setItem($item)->toHtml() ?><?php endif;?>
+
+        <!-- Row 2: Qty + Actions -->
+        <div style="display:flex; align-items:center; gap:6px; margin-top:10px; flex-wrap:wrap;">
+            <!-- Qty stepper -->
+            <div style="display:inline-flex; align-items:center; gap:4px; flex-shrink:0;"
+                 x-data="{
+                     qty: <?= (int)$qty ?>,
+                     min: <?= (int)($minSalesQty ?: 1) ?>,
+                     max: <?= (int)($maxSalesQty ?: 10000) ?>,
+                     step: <?= (int)($step ?: 1) ?>,
+                     submitUpdate() { clearTimeout(this._t); this._t = setTimeout(() => { const btn = document.querySelector('[data-cart-item-update]'); if (btn) btn.click(); }, 500); },
+                     dec() { if (this.qty - this.step >= this.min) { this.qty -= this.step; this.$refs.qi.value = this.qty; this.$refs.qi.dispatchEvent(new Event('change')); this.submitUpdate(); } },
+                     inc() { if (this.qty + this.step <= this.max) { this.qty += this.step; this.$refs.qi.value = this.qty; this.$refs.qi.dispatchEvent(new Event('change')); this.submitUpdate(); } }
+                 }">
+                <button type="button" @click="dec()" :disabled="qty <= min"
+                        style="width:40px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:0.5rem; border:1px solid #D4D4D4; background:#fff; color:#171717; cursor:pointer; padding:0;"
+                        aria-label="<?= $escaper->escapeHtmlAttr(__('Decrease quantity')) ?>">
+                    <?= $lucideIcons->minusHtml('', 18, 18, ['aria-hidden' => 'true']) ?>
+                </button>
+                <input x-ref="qi" x-model.number="qty"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    name="cart[<?= $escaper->escapeHtmlAttr($item->getId()) ?>][qty]"
+                    value="<?= $escaper->escapeHtmlAttr($qty) ?>"
+                    title="<?= $escaper->escapeHtmlAttr(__('Qty')) ?>"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Qty')) ?>"
+                    style="width:44px; height:44px; text-align:center; font-size:16px; font-weight:700; color:#111827; background:#fff; border:1px solid #D4D4D4; border-radius:0.5rem; padding:0; margin:0; box-sizing:border-box; outline:none;"
+                    required
+                    data-role="cart-item-qty"
+                >
+                <button type="button" @click="inc()" :disabled="qty >= max"
+                        style="width:40px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:0.5rem; border:1px solid #D4D4D4; background:#fff; color:#171717; cursor:pointer; padding:0;"
+                        aria-label="<?= $escaper->escapeHtmlAttr(__('Increase quantity')) ?>">
+                    <?= $lucideIcons->plusHtml('', 18, 18, ['aria-hidden' => 'true']) ?>
+                </button>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="item-actions" style="display:inline-flex; align-items:center; gap:4px; flex-wrap:nowrap;">
+                <?= /* @noEscape */ $block->getActions($item) ?>
+            </div>
+        </div>
+    </div>
+</article>

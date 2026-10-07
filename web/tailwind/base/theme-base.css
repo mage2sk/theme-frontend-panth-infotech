@@ -1,0 +1,57 @@
+/**
+ * Theme Base Styles
+ * Additional global styles using CSS custom properties from backend configuration
+ * These replace inline styles that were previously in templates
+ */
+
+@layer base {
+    /* Typography from backend configuration */
+    body {
+        font-family: var(--default-font-family, system-ui, -apple-system, sans-serif);
+        font-size: var(--default-font-size, 16px);
+        font-feature-settings: var(--default-font-feature-settings, normal);
+        font-variation-settings: var(--default-font-variation-settings, normal);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--heading-font-family, var(--default-font-family, system-ui, -apple-system, sans-serif));
+    }
+
+    /* Sticky header body offset */
+    body.header-sticky {
+        padding-top: var(--header-height, 80px);
+    }
+
+    /* Font display optimization */
+    @font-face {
+        font-display: swap;
+    }
+
+    /* Logo sizing with responsive breakpoints */
+    .logo-wrapper img {
+        display: block;
+        object-fit: contain;
+    }
+
+    @media (min-width: 1024px) {
+        .logo-wrapper img {
+            width: var(--logo-desktop-width, 180px);
+            height: var(--logo-desktop-height, 60px);
+        }
+    }
+
+    @media (max-width: 1023px) {
+        .logo-wrapper img {
+            width: var(--logo-mobile-width, 120px);
+            height: var(--logo-mobile-height, 40px);
+        }
+    }
+
+    /* Hide desktop menu on mobile */
+    @media (max-width: 1023px) {
+        #topmenu-desktop,
+        #topmenu-desktop.topmenu-desktop {
+            display: none;
+        }
+    }
+}

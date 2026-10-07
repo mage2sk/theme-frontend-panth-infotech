@@ -1,0 +1,24 @@
+Panth Infotech Theme — Proprietary License
+
+Copyright (c) 2026 Panth Infotech (Kishan Savaliya)
+All rights reserved.
+
+This software is licensed, not sold. One license permits installation
+on one (1) Magento production instance and its associated staging and
+development environments.
+
+You MAY:
+  - Install and use the theme on a single Magento installation
+  - Modify the theme for your own use on the licensed installation
+  - Create backups for archival purposes
+
+You MAY NOT:
+  - Redistribute, sublicense, or resell the theme
+  - Share, publish, or make the theme available to third parties
+  - Remove or alter copyright notices or license information
+  - Use the theme on more than one production installation per license
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+For licensing inquiries: kishansavaliyakb@gmail.com
+Website: https://kishansavaliya.com

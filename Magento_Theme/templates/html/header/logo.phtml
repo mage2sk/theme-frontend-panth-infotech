@@ -1,0 +1,62 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Custom Logo Template - Ensures visibility
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\Logo\LogoSizeResolver;
+use Hyva\Theme\ViewModel\Logo\LogoPathResolver;
+use Hyva\Theme\ViewModel\StoreConfig;
+use Magento\Framework\Escaper;
+use Magento\Theme\Block\Html\Header\Logo;
+
+/** @var Logo $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var StoreConfig $storeConfig */
+$storeConfig = $viewModels->require(StoreConfig::class);
+$storeName = $block->getThemeName() ?: $storeConfig->getStoreConfig('general/store_information/name') ?: __('Store logo');
+
+/** @var LogoSizeResolver $logoSizeResolver */
+$logoSizeResolver = $viewModels->require(LogoSizeResolver::class);
+$logoWidth = $logoSizeResolver && $logoSizeResolver->getWidth()
+    ? $logoSizeResolver->getWidth()
+    : $block->getLogoWidth();
+$logoHeight = $logoSizeResolver && $logoSizeResolver->getHeight()
+    ? $logoSizeResolver->getHeight()
+    : $block->getLogoHeight();
+
+/** @var LogoPathResolver $logoPathResolver */
+$logoPathResolver = $block->getData('logoPathResolver');
+$logoSrc = $logoPathResolver && method_exists($logoPathResolver, 'getLogoSrc')
+    ? $logoPathResolver->getLogoSrc($block->getData('logo_file'))
+    : $block->getLogoSrc();
+?>
+<?php if ($logoSrc): ?>
+<a
+    class="logo-link"
+    href="<?= $escaper->escapeUrl($block->getUrl('')) ?>"
+    aria-label="<?= $escaper->escapeHtmlAttr(__('Go to Home page')) ?>"
+>
+    <img
+        class="logo-image"
+        src="<?= $escaper->escapeUrl($logoSrc) ?>"
+        alt="<?= $escaper->escapeHtmlAttr($block->getLogoAlt() ?: $storeName) ?>"
+        <?= $logoWidth ? 'width="' . $escaper->escapeHtmlAttr($logoWidth) . '"' : '' ?>
+        <?= $logoHeight ? 'height="' . $escaper->escapeHtmlAttr($logoHeight) . '"' : '' ?>
+        loading="eager"
+    >
+</a>
+<?php else: ?>
+<a
+    class="logo-text"
+    href="<?= $escaper->escapeUrl($block->getUrl('')) ?>"
+    aria-label="<?= $escaper->escapeHtmlAttr(__('Go to Home page')) ?>"
+>
+    <?= $escaper->escapeHtml($storeName ?: 'STORE LOGO') ?>
+</a>
+<?php endif; ?>
