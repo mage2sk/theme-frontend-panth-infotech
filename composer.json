@@ -2,8 +2,8 @@
     "name": "mage2kishan/theme-frontend-panth-infotech",
     "description": "Hyva child theme Panth/Infotech for Magento 2, based on the Hyva/default parent theme.",
     "type": "magento2-theme",
-    "version": "1.0.20",
-    "license": "proprietary",
+    "version": "1.0.21",
+    "license": "MIT",
     "keywords": [
         "magento2",
         "magento2-theme",

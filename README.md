@@ -318,4 +318,4 @@ Email: kishansavaliyakb@gmail.com
 
 ## License
 
-Proprietary. See `LICENSE.txt`.
+Free and open source under the MIT License. See [LICENSE.txt](LICENSE.txt). Files that carry their own copyright header (bundled third-party libraries, Magento or Hyvä templates) remain under their original licenses.
